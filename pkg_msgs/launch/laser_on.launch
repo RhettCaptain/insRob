@@ -1,5 +1,5 @@
 <launch>
-	<node pkg="map_server" name="map_server" type="map_server" args="/home/root/.nav/slam_map.yaml"/>
+	<node pkg="map_server" name="map_server" type="map_server" args="/home/canfu/.nav/slam_map.yaml"/>
 	<node pkg="lms1xx" name="LMS1xx_node" type="LMS1xx_node"/>
 	<node pkg="amcl" name="amcl" type="amcl"/>
 </launch>
