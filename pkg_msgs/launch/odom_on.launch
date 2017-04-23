@@ -1,0 +1,5 @@
+<launch>
+	<node pkg="pkg_odometry" name="node_odometry" type="node_odometry"/>
+	<node pkg="pkg_sensors_tf" name="node_sensors_tf" type="node_sensors_tf"/>
+	<node pkg="pkg_pose" name="node_pose" type="node_pose"/>
+</launch>

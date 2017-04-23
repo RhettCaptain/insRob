@@ -1,0 +1,4 @@
+int32 poseA
+int32 poseB
+---
+bool state

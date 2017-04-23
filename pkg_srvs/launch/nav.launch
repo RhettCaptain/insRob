@@ -1,0 +1,6 @@
+<launch>	
+	<node pkg="pkg_srvs" name="node_server" type="node_server"/>
+	<node pkg="pkg_msgs" name="node_mapping_listener" type="node_mapping_listener"/>
+	<node pkg="pkg_msgs" name="node_laser_listener" type="node_laser_listener"/>
+	<node pkg="pkg_msgs" name="node_odometry_listener" type="node_odometry_listener"/>
+</launch>

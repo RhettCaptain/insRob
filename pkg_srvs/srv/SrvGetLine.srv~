@@ -1,0 +1,4 @@
+PoseWithCovariance poseA
+PoseWithCovariance  poseB
+---
+bool state
