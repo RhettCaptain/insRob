@@ -1,116 +1,183 @@
 #include "SerialPort.h"
 
-SerialPort::SerialPort(const char* portName)
+
+
+SerialPort::SerialPort(const char* pPortName)
 {
-	port = portName;
+	fd = -1;
+	portName = pPortName;
+	openState = false;
+	blockState = false;
+	outTime = 5;
+	baud = 9600;
+	dataBits = 8;
+	stopBits = 1;
+	parity = 'n';		
+	inMode = 'c';
+	outMode = 'c';
 }
+
+SerialPort::~SerialPort()
+{
+	
+}
+
 
 int SerialPort::openPort()
 {
-	fd = open(port,O_RDWR | O_NOCTTY | O_NDELAY);
+	fd = open(portName,O_RDWR|O_NOCTTY|O_NDELAY);
 	if(-1 == fd)
 	{
-		perror("can't open device!\n");
-		return(-1);
+		cout << "open" << portName <<"fail\n";
+		return -1;
 	}
-	return 0;
+	openState = true;
 }
 
-int SerialPort::closePort()
+int SerialPort::openPort(int flag)
 {
+	fd = open(portName,flag);
+	
 	if(-1 == fd)
 	{
-		perror("no open device!\n");
-		return(-1);
+		cout << "open" << portName << "fail\n";
+		return -1;
 	}
-	close(fd);
-	return 0;
+	openState = true;
 }
 
-int SerialPort::sendPort(char* sendCon, int len)
+int SerialPort::openPort(int flag,int perms)
 {
-	int nBytes;
-	nBytes = write(fd,sendCon,len);
-	return nBytes;
-}
-
-int SerialPort::readPort(char* readCon, int len)
-{
-	int nBytes;
-	nBytes = read(fd, readCon, len);
-	return nBytes;
-}
-
-int SerialPort::setPort(int baud,int databits,int stopbits,char parity)
-{
-	struct termios options;
-	if(tcgetattr(fd,&options)!=0)
+	fd = open(portName,flag,perms);
+	
+	if(-1 == fd)
 	{
-		perror("can't get current option\n");
-		return(-1);
+		cout << "open" << portName << "fail\n";
+		return -1;
 	}
-	switch(baud)
+	openState = true;
+	
+}
+
+void SerialPort::closePort()
+{
+	if(fd != -1 && openState == true)
 	{
+		close(fd);	
+	}
+	else 
+	{
+		cout << "no port is open!\n";	
+	}	
+	openState = false;
+}
+
+void SerialPort::setBaud(int pBaud)
+{
+	//save old config
+	if( tcgetattr(fd,&options) != 0)
+	{
+		cout << "please open port first!\n";
+		return;
+	}
+	
+	int tmp;
+	switch(pBaud)
+	{
+	case 4800:
+		tmp = B4800;
+		break; 
 	case 9600:
-		cfsetispeed(&options,B9600);
-		cfsetospeed(&options,B9600);
+		tmp = B9600;
 		break;
 	case 19200:
-		cfsetispeed(&options,B19200);
-		cfsetospeed(&options,B19200);
+		tmp = B19200;
+		break;
+	case 38400:
+		tmp = B38400;
+		break;
+	case 57600:
+		tmp = B57600;
 		break;
 	case 115200:
-		cfsetispeed(&options,B115200);
-		cfsetospeed(&options,B115200);
+		tmp = B115200;
 		break;
 	default:
-		break;	
+		tmp = -1;
+		cout << "unsupported baud\n";
+		return;
 	}
-	options.c_cflag |= (CLOCAL|CREAD);
-	
-	options.c_cflag &= ~CSIZE;
-	switch(databits)
+	baud = pBaud;
+	cfsetispeed(&options, tmp);
+	cfsetospeed(&options, tmp);
+	options.c_cflag |= (CLOCAL | CREAD);
+	tcflush(fd,TCIFLUSH);	//flush
+	//set immediately
+	if(tcsetattr(fd,TCSANOW,&options) !=0)
 	{
+		cout << "set baud fail\n";
+		return;
+	}
+}
+
+int SerialPort::getBaud()
+{
+	return baud;
+}
+
+void SerialPort::setDataBits(int pDataBits)
+{
+	//save old options
+	if( tcgetattr(fd,&options) != 0 )
+	{
+		cout << "please open port first\n";
+		return;
+	}
+	//set databits
+	options.c_cflag &= ~CSIZE;	//clear
+	switch(pDataBits)
+	{
+	case 5:
+		options.c_cflag |= CS5;
+		break;
+	case 6:
+		options.c_cflag |= CS6;
+		break;
 	case 7:
 		options.c_cflag |= CS7;
 		break;
 	case 8:
 		options.c_cflag |= CS8;
 		break;
-	default:
-		fprintf(stderr,"Unsupported data size\n");
-		return(-1);
-	} 
-	
-	switch(parity)
-	{
-	case 'n':
-	case 'N':
-		options.c_cflag &= ~PARENB;
-		options.c_iflag &= ~INPCK;
-		break;
-	case 'o':
-	case 'O':
-		options.c_cflag |= (PARODD | PARENB);
-		options.c_iflag |= INPCK;
-		break;
-	case 'e':
-	case 'E':
-		options.c_cflag |= PARENB;
-		options.c_cflag &= ~PARODD;
-		options.c_iflag |= INPCK;
-		break;
-	case 's':
-	case 'S':
-		options.c_cflag &= ~PARENB;
-		options.c_cflag &= ~CSTOPB;
-		break;
-	default:
-		fprintf(stderr,"Unsipported parity\n");
-		return(-1);
+	defalut:
+		cout<< "unsupported data size\n";
+		return;
 	}
+	dataBits = pDataBits;	
+	//set immediately
+	tcflush(fd,TCIFLUSH);	//flush
+	if(tcsetattr(fd,TCSANOW,&options) != 0)
+	{
+		cout << "set databits fail\n";
+		return;
+	}
+}
 
-	switch(stopbits)
+int SerialPort::getDataBits()
+{
+	return dataBits;
+}
+
+void SerialPort::setStopBits(int pStopBits)
+{
+	//save old options
+	if( tcgetattr(fd,&options) != 0)
+	{
+		cout  << "please open port first\n";
+		return;
+	}
+	//set stopbits
+	switch(pStopBits)
 	{
 	case 1:
 		options.c_cflag &= ~CSTOPB;
@@ -119,66 +186,233 @@ int SerialPort::setPort(int baud,int databits,int stopbits,char parity)
 		options.c_cflag |= CSTOPB;
 		break;
 	default:
-		fprintf(stderr,"Unsupported stop bits\n");
-		return(-1);
+		cout << "unsupported stopBits\n";
+		return;
 	}
+	stopBits = pStopBits;
+	//set immediately
+	tcflush(fd,TCIFLUSH);
+	if(tcsetattr(fd,TCSANOW,&options) != 0)
+	{
+		cout << "set stopbits fail\n";
+		return;
+	}
+}
 
-	if(parity != 'n')
+int SerialPort::getStopBits()
+{
+	return stopBits;
+}
+
+void SerialPort::setParity(char pParity)
+{
+	//save old options
+	if( tcgetattr(fd,&options) != 0)
 	{
+		cout << "please open port first\n";
+		return;
+	}
+	//set parity
+	switch(pParity)
+	{
+	case 'n':	//none
+	case 'N':
+		options.c_cflag &= ~PARENB;
+		options.c_iflag &= ~INPCK;
+		break;
+	case 'o':	//odd 
+	case 'O':
+		options.c_cflag |= (PARODD | PARENB);
 		options.c_iflag |= INPCK;
+		break;
+	case 'e':	//even
+	case 'E':
+		options.c_cflag |= PARENB;
+		options.c_cflag &= ~PARODD;
+		options.c_iflag |= INPCK;
+		break;
+	case 's':	//space
+	case 'S':
+		options.c_cflag &= ~PARENB;
+		options.c_cflag &= ~CSTOPB;
+		break;
+	default:
+		cout << "unsupported parity\n";
+		return;
 	}
-	tcflush(fd,TCIOFLUSH);
-	options.c_lflag &= ~(ICANON | ECHO | ECHOE);		//raw mode:input immediately, no echo
-	options.c_oflag &= ~OPOST;		//output immediately without buff
-	options.c_cc[VTIME]=50;		//mostly wait 5s for reading in block mode
-	options.c_cc[VMIN]=0;
-	if(tcsetattr(fd,TCSANOW,&options)!=0)
+	parity = pParity;
+	//set immediately
+	tcflush(fd, TCIFLUSH);
+	if( tcsetattr(fd,TCSANOW,&options) != 0)
 	{
-		perror("can't set new options\n");
-		return(-1);
+		cout << "set parity fail\n";
+		return;
 	}
-	return(0);
+}
+
+char SerialPort::getParity()
+{
+	return parity;
+}
+
+void SerialPort::setPort()
+{
+	setBaud(baud);
+	setDataBits(dataBits);
+	setStopBits(stopBits);
+	setParity(parity);
+}
+
+void SerialPort::setPort(int pBaud,int pDataBits,int pStopBits,char pParity)
+{
+	setBaud(pBaud);
+	setDataBits(pDataBits);
+	setStopBits(pStopBits);
+	setParity(pParity);
+}
+
+bool SerialPort::isOpen()
+{
+	return openState;
+}
+	
+bool SerialPort::isBlock()
+{
+	return blockState;
 }
 
 void SerialPort::setBlock(bool on)
 {
 	int flags;
+	flags = fcntl(fd,F_GETFL,0);
 	if(on)
 	{
-		flags = fcntl(fd,F_GETFL,0);
 		flags &= ~O_NONBLOCK;
-		fcntl(fd,F_SETFL,flags);
 	}
 	else
 	{
-		flags = fcntl(fd,F_GETFL,0);
 		flags |= O_NONBLOCK;
-		fcntl(fd,F_SETFL,flags);
+	}
+	blockState = on;
+	fcntl(fd,F_SETFL,flags);
+}
+
+void SerialPort::setOutTime(float pOutTime)
+{
+	//save old options
+	if( tcgetattr(fd,&options) != 0)
+	{
+		cout << "please open port first\n";
+		return;
+	}
+	//setOutTime
+	options.c_cc[VTIME] = (int)(pOutTime*10);
+	outTime = options.c_cc[VTIME]/10;
+	//set immediately
+	if(tcsetattr(fd, TCSANOW, &options) != 0)
+	{
+		cout << "set out time fail\n";
+		return;
 	}
 }
 
-uint SerialPort::crc16_modbus(uchar *p, int len)
+float SerialPort::getOutTime()
 {
-	char i;
-	int j;
-	uint crc=0xffff;
-	
-	for(j=0;j<len;j++)
+	return outTime;
+}
+
+void SerialPort::setInMode(char mode)
+{
+	//save old options
+	if( tcgetattr(fd,&options) != 0)
 	{
-		crc^=(*p);
-		p++;
-		for(i=8;i!=0;i--)
-		{
-			if(crc&1)
-			{
-				crc>>=1;
-				crc^=0xa001;
-			}
-			else
-			{
-				crc>>=1;
-			}
-		}
+		cout << "please open port first\n";
+		return;
 	}
-	return crc;
+	switch(mode)
+	{
+	case 'c':	//classic
+	case 'C':
+		options.c_lflag |= (ICANON | ECHO | ECHOE);
+		inMode = 'c';
+		break;
+	case 'r':	//raw
+	case 'R':
+		options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+		inMode = 'r';
+		break;
+	default:
+		cout << "only support c/C for classic mode and r/R for raw mode\n";
+		return;
+	}
+	//set immediately
+	if(tcsetattr(fd,TCSANOW,&options)!=0)
+	{
+		cout << "set input mode fail\n";
+		return;
+	}
+}
+
+char SerialPort::getInMode()
+{
+	return inMode;
+}
+
+void SerialPort::setOutMode(char mode)
+{
+	//save old options
+	if( tcgetattr(fd,&options) != 0)
+	{
+		cout << "please open port first\n";
+		return;
+	}
+	switch(mode)
+	{
+	case 'c':	//classic
+	case 'C':
+		options.c_oflag |= OPOST;
+		outMode = 'c';
+		break;
+	case 'r':	//raw
+	case 'R':
+		options.c_oflag &= ~OPOST;
+		outMode = 'r';
+		break;
+	default:	
+		cout << "only support c/C for classic mode and r/R for raw mode\n";
+		return;
+	}
+	//set immediately
+	if(tcsetattr(fd,TCSANOW,&options)!=0)
+	{
+		cout << "set output mode fail\n";
+		return;
+	}
+}
+
+char SerialPort::getOutMode()
+{	
+	return outMode;
+}
+
+int SerialPort::readPort(char* buffer, int len)
+{
+	if(fd == -1)
+	{
+		cout << "please open port first\n";
+		return -1;
+	}
+	int nBytes = read(fd,buffer,len);
+	return nBytes;
+}
+
+
+int SerialPort::writePort(char* buffer, int len)
+{
+	if(fd == -1)
+	{
+		cout << "please open port first\n";
+		return -1;
+	}
+	int nBytes = write(fd,buffer,len);
 }
