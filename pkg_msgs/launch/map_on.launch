@@ -1,5 +1,6 @@
-<launch>
-	<node pkg="pkg_odometry" name="node_odometry" type="node_odometry"/>
+<launch>	
+	<node pkg="pkg_base_controller" name="node_base_controller" type="node_base_controller"/>
+	<node pkg="pkg_odometry" name="node_odometry" type="node_odometry" output="screen"/>
 	<node pkg="lms1xx" name="LMS1xx_node" type="LMS1xx_node"/>
 	<node pkg="pkg_sensors_tf" name="node_sensors_tf" type="node_sensors_tf"/>
 	<node pkg="gmapping" name="slam_gmapping" type="slam_gmapping"/>

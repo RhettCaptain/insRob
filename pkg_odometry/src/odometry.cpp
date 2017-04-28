@@ -8,18 +8,20 @@
 #include <fcntl.h>
 #include <math.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <iostream>
 
 double x,y,th;			//位姿
 double vx,vy,vth;		//速度
 
 ros::Publisher odometryPublisher;	//量测信息发布器
-tf::TransformBroadcaster tfBroadcaster;	//坐标转换广播器
 const double degree = M_PI/180;
 ros::Time curTime;
 ros::Time lastTime;
 
 void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 {
+	std::cout << "updateData\n";
+	tf::TransformBroadcaster tfBroadcaster;	//坐标转换广播器
 	curTime = ros::Time::now(); 
 	//读取、判断、更新最新数据
 	if(msg->type == "ODOMETER")
@@ -129,8 +131,8 @@ int main(int argc, char** argv) {
 	
 	return 0;
 	
-/*   ref
-	ros::init(argc, argv, "state_publisher");
+//   ref
+/*	ros::init(argc, argv, "state_publisher");
 	ros::NodeHandle n;
 	ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 10);
 
@@ -176,7 +178,8 @@ int main(int argc, char** argv) {
 
 		// update transform
 		odom_trans.header.stamp = current_time; 
-		odom_trans.transform.translation.x = x  
+		odom_trans.transform.translation.x = x;  
+		odom_trans.transform.translation.y = y;  
 		odom_trans.transform.translation.z = 0.0;
 		odom_trans.transform.rotation = tf::createQuaternionMsgFromYaw(th);
 
