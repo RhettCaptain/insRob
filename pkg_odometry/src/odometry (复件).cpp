@@ -10,8 +10,6 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <iostream>
 
-#include <fstream>
-
 double x,y,th;			//位姿
 double vx,vy,vth;		//速度
 
@@ -19,12 +17,11 @@ ros::Publisher odometryPublisher;	//量测信息发布器
 const double degree = M_PI/180;
 ros::Time curTime;
 ros::Time lastTime;
-geometry_msgs::TransformStamped odom_tf;
-nav_msgs::Odometry odometry;
-	std::ofstream debug;
+
 void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 {
-//	std::cout << "updateData\n";
+	std::cout << "updateData\n";
+	tf::TransformBroadcaster tfBroadcaster;	//坐标转换广播器
 	curTime = ros::Time::now(); 
 	//读取、判断、更新最新数据
 	if(msg->type == "ODOMETER")
@@ -59,9 +56,9 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 		//TO DO
 	}
 
-debug << "vx:" <<  vx << "vy:" << vy << "x:" << x << "y:" << y << "\n"; 
 	//发布最新量测法信息
 	//填入头信息
+	nav_msgs::Odometry odometry;
 	odometry.header.stamp = curTime;
 	odometry.header.frame_id = "odom";
 	odometry.child_frame_id = "base_link";
@@ -80,8 +77,10 @@ debug << "vx:" <<  vx << "vy:" << vy << "x:" << x << "y:" << y << "\n";
 	odometry.twist.twist.angular.y = 0.0;
 	odometry.twist.twist.angular.z = vth;
 	//发布
+	odometryPublisher.publish(odometry);
 
 	//发布最新"odom->base_link"坐标转换
+	geometry_msgs::TransformStamped odom_tf;
 	odom_tf.header.frame_id = "odom";
 	odom_tf.child_frame_id = "base_link";
 	odom_tf.header.stamp = curTime; 
@@ -89,6 +88,7 @@ debug << "vx:" <<  vx << "vy:" << vy << "x:" << x << "y:" << y << "\n";
 	odom_tf.transform.translation.y = y; 
 	odom_tf.transform.translation.z = 0.0;
 	odom_tf.transform.rotation = tf::createQuaternionMsgFromYaw(th);
+	tfBroadcaster.sendTransform(odom_tf);
 
 	lastTime = curTime;
 }
@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
 	ros::NodeHandle nodeHandle;
 	curTime = ros::Time::now(); 
 	lastTime = ros::Time::now(); 
-debug.open("/home/canfu/debug.txt");
+	
 	ros::Subscriber odometrySensorSubscriber = nodeHandle.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
 	ros::Subscriber reviseOdometrySubscriber = nodeHandle.subscribe("topic_revise_odometry",1000,reviseOdometry);	//订阅量测修正信息
 	odometryPublisher = nodeHandle.advertise<nav_msgs::Odometry>("odom",10);		
@@ -127,13 +127,7 @@ debug.open("/home/canfu/debug.txt");
 		th = atof(strtok(NULL,";"));
 	}
 	
-	tf::TransformBroadcaster tfBroadcaster;	//坐标转换广播器
-	while(ros::ok())
-	{
-		ros::spinOnce();	
-		odometryPublisher.publish(odometry);
-		tfBroadcaster.sendTransform(odom_tf);
-	}
+	ros::spin();	
 	
 	return 0;
 	
