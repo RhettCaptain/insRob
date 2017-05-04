@@ -10,21 +10,21 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <iostream>
 
-#include <fstream>
+// position
+double x; 
+double y;
+double th;
 
-double x,y,th;			//位姿
-double vx,vy,vth;		//速度
+// velocity
+double vx;
+double vy;
+double vth;
 
-ros::Publisher odometryPublisher;	//量测信息发布器
-const double degree = M_PI/180;
 ros::Time curTime;
 ros::Time lastTime;
-geometry_msgs::TransformStamped odom_tf;
-nav_msgs::Odometry odometry;
-	std::ofstream debug;
+	
 void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 {
-//	std::cout << "updateData\n";
 	curTime = ros::Time::now(); 
 	//读取、判断、更新最新数据
 	if(msg->type == "ODOMETER")
@@ -39,9 +39,10 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 		double dt = (curTime - lastTime).toSec();
 		vx = cos(th) * v;
 		vy = sin(th) * v;
-		//vth remain
-		x += vx * dt;
-		y += vy * dt;
+std::cout<<"vl: " << vl << "vr: " <<vr<<std::endl;
+vth = (vr-vl)/0.4;
+	//	x += vx * dt;
+	//	y += vy * dt;
 		//th remain 
 	}
 	else if(msg->type == "COMPASS")
@@ -59,37 +60,6 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 		//TO DO
 	}
 
-debug << "vx:" <<  vx << "vy:" << vy << "x:" << x << "y:" << y << "\n"; 
-	//发布最新量测法信息
-	//填入头信息
-	odometry.header.stamp = curTime;
-	odometry.header.frame_id = "odom";
-	odometry.child_frame_id = "base_link";
-	//更新位姿
-	odometry.pose.pose.position.x = x;
-	odometry.pose.pose.position.y = y;
-	odometry.pose.pose.position.z = 0.0;
-	geometry_msgs::Quaternion odometry_quat;	
-	odometry_quat = tf::createQuaternionMsgFromRollPitchYaw(0,0,th);
-	odometry.pose.pose.orientation = odometry_quat;
-	//更新速度
-	odometry.twist.twist.linear.x = vx;
-	odometry.twist.twist.linear.y = vy;
-	odometry.twist.twist.linear.z = 0.0;
-	odometry.twist.twist.angular.x = 0.0;
-	odometry.twist.twist.angular.y = 0.0;
-	odometry.twist.twist.angular.z = vth;
-	//发布
-
-	//发布最新"odom->base_link"坐标转换
-	odom_tf.header.frame_id = "odom";
-	odom_tf.child_frame_id = "base_link";
-	odom_tf.header.stamp = curTime; 
-	odom_tf.transform.translation.x = x; 
-	odom_tf.transform.translation.y = y; 
-	odom_tf.transform.translation.z = 0.0;
-	odom_tf.transform.rotation = tf::createQuaternionMsgFromYaw(th);
-
 	lastTime = curTime;
 }
 
@@ -102,60 +72,29 @@ void reviseOdometry(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& ms
 	lastTime = curTime;
 	
 }
-int main(int argc, char** argv) {
-	ros::init(argc,argv,"node_odometry");
-	ros::NodeHandle nodeHandle;
-	curTime = ros::Time::now(); 
-	lastTime = ros::Time::now(); 
-debug.open("/home/canfu/debug.txt");
-	ros::Subscriber odometrySensorSubscriber = nodeHandle.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
-	ros::Subscriber reviseOdometrySubscriber = nodeHandle.subscribe("topic_revise_odometry",1000,reviseOdometry);	//订阅量测修正信息
-	odometryPublisher = nodeHandle.advertise<nav_msgs::Odometry>("odom",10);		
-	
-	//读取初始位姿
-	std::string userName = getlogin();
-	std::string fileName = "/home/" + userName + "/.nav/initPose.cfg";
-	int initPoseFd = open(fileName.c_str(),O_RDONLY);
-	if(initPoseFd<0)	//没有文件则取0
-	{
-		x = 0.0;
-		y = 0.0;
-		th = 0.0;
-	}
-	else
-	{	
-		th = atof(strtok(NULL,";"));
-	}
-	
-	tf::TransformBroadcaster tfBroadcaster;	//坐标转换广播器
-	while(ros::ok())
-	{
-		ros::spinOnce();	
-		odometryPublisher.publish(odometry);
-		tfBroadcaster.sendTransform(odom_tf);
-	}
-	
-	return 0;
-	
-//   ref
-/*	ros::init(argc, argv, "state_publisher");
+
+int main(int argc, char** argv) 
+{
+    ros::init(argc, argv, "state_publisher");
 	ros::NodeHandle n;
+	ros::NodeHandle n2;
+ros::Subscriber odometrySensorSubscriber = n2.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
+ros::Subscriber reviseOdometrySubscriber = n.subscribe("topic_revise_odometry",1000,reviseOdometry);	//订阅量测修正信息
 	ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 10);
 
 	// initial position
-	double x = 0.0; 
-	double y = 0.0;
-	double th = 0;
+	x = 0.0; 
+	y = 0.0;
+	th = 0;
 
 	// velocity
-	double vx = 0.4;
-	double vy = 0.0;
-	double vth = 0.4;
+	vx = 0.0;
+	vy = 0.0;
+	vth = 0.0;
 
-	ros::Time current_time;
-	ros::Time last_time;
-	current_time = ros::Time::now();
-	last_time = ros::Time::now();
+
+	curTime = ros::Time::now();
+	lastTime = ros::Time::now();
 
 	tf::TransformBroadcaster broadcaster;
 	ros::Rate loop_rate(20);
@@ -168,9 +107,9 @@ debug.open("/home/canfu/debug.txt");
 	odom_trans.child_frame_id = "base_link";
 
 	while (ros::ok()) {
-		current_time = ros::Time::now(); 
-
-		double dt = (current_time - last_time).toSec();
+		curTime = ros::Time::now(); 
+        	ros::spinOnce();
+		double dt = (curTime - lastTime).toSec();
 		double delta_x = (vx * cos(th) - vy * sin(th)) * dt;
 		double delta_y = (vx * sin(th) + vy * cos(th)) * dt;
 		double delta_th = vth * dt;
@@ -178,12 +117,13 @@ debug.open("/home/canfu/debug.txt");
 		x += delta_x;
 		y += delta_y;
 		th += delta_th;
-
+std::cout << "x: " << x << "y: " << y << std::endl;
+std::cout << "vx: " << vx << "vy: " << vy << std::endl;
 		geometry_msgs::Quaternion odom_quat;	
 		odom_quat = tf::createQuaternionMsgFromRollPitchYaw(0,0,th);
 
 		// update transform
-		odom_trans.header.stamp = current_time; 
+		odom_trans.header.stamp = curTime; 
 		odom_trans.transform.translation.x = x;  
 		odom_trans.transform.translation.y = y;  
 		odom_trans.transform.translation.z = 0.0;
@@ -191,7 +131,7 @@ debug.open("/home/canfu/debug.txt");
 
 		//filling the odometry
 		nav_msgs::Odometry odom;
-		odom.header.stamp = current_time;
+		odom.header.stamp = curTime;
 		odom.header.frame_id = "odom";
 		odom.child_frame_id = "base_link";
 
@@ -209,7 +149,7 @@ debug.open("/home/canfu/debug.txt");
 		odom.twist.twist.angular.y = 0.0;
 		odom.twist.twist.angular.z = vth;
 
-		last_time = current_time;
+		lastTime = curTime;
 
 		// publishing the odometry and the new tf
 		broadcaster.sendTransform(odom_trans);
@@ -218,6 +158,6 @@ debug.open("/home/canfu/debug.txt");
 		loop_rate.sleep();
 	}
 	return 0;
-*/
+
 }
 

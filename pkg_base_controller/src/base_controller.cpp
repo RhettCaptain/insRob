@@ -54,19 +54,20 @@ int main(int argc, char** argv)
 //			cout << chaTmp << "chaTMp";
 			curLeftEncoder = atoi(strtok(chaTmp," "));
 			curRightEncoder = atoi(strtok(NULL," "));
-//			cout << curLeftEncoder << "-" << curRightEncoder<<endl;
-			odometrySensorMsg.vlf = curLeftEncoder - lastLeftEncoder;
-			odometrySensorMsg.vlb = curLeftEncoder - lastLeftEncoder;
-			odometrySensorMsg.vrf = curRightEncoder - lastRightEncoder;
-			odometrySensorMsg.vrb = curRightEncoder - lastRightEncoder;
-//			odometrySensorMsg.type="ODOMETER";
+			cout << curLeftEncoder << "-" << curRightEncoder<<endl;
+			double ratio = 2 * M_PI * 0.05 / 200; 
+			odometrySensorMsg.vlf = (curLeftEncoder - lastLeftEncoder)*ratio;
+			odometrySensorMsg.vlb = (curLeftEncoder - lastLeftEncoder)*ratio;
+			odometrySensorMsg.vrf = (curRightEncoder - lastRightEncoder)*ratio;
+			odometrySensorMsg.vrb = (curRightEncoder - lastRightEncoder)*ratio;
+			odometrySensorMsg.type="ODOMETER";
 			odometrySensorPublisher.publish(odometrySensorMsg);
 			lastLeftEncoder = curLeftEncoder;
 			lastRightEncoder = curRightEncoder;
 		}
 //		delay(500);		
 //		sleep(1);
-		usleep(200*1000);
+		usleep(900*1000);
 	}
 }
 
