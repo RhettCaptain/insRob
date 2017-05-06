@@ -62,6 +62,10 @@ public:
 
 	int readPort(char* buffer,int len);
 	int writePort(char* buffer,int len);
+
+	void flush();
+	void inFlush();
+	void outFlush();
 };
 
 

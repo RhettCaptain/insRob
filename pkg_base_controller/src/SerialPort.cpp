@@ -416,3 +416,19 @@ int SerialPort::writePort(char* buffer, int len)
 	}
 	int nBytes = write(fd,buffer,len);
 }
+
+
+void SerialPort::flush()
+{
+	tcflush(fd,TCIOFLUSH);
+}
+
+void SerialPort::inFlush()
+{
+	tcflush(fd,TCIFLUSH);
+}
+
+void SerialPort::outFlush()
+{
+	tcflush(fd,TCOFLUSH);
+}

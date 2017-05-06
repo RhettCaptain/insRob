@@ -134,6 +134,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
  add_executable(node_base_controller src/base_controller.cpp src/SerialPort.cpp)
+ add_executable(node_remote test/remote.cpp src/SerialPort.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -149,6 +150,10 @@ include_directories(
  target_link_libraries(node_base_controller
    ${catkin_LIBRARIES}
  )
+ target_link_libraries(node_remote
+   ${catkin_LIBRARIES}
+ )
+ 
 
 #############
 ## Install ##
