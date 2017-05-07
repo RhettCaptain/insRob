@@ -40,7 +40,7 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 		vx = cos(th) * v;
 		vy = sin(th) * v;
 std::cout<<"vl: " << vl << "vr: " <<vr<<std::endl;
-vth = (vr-vl)/0.4;
+vth = (vr-vl)/0.35;
 	//	x += vx * dt;
 	//	y += vy * dt;
 		//th remain 
