@@ -8,7 +8,32 @@
 #define TTY_PATH            "/dev/tty"
 #define STTY_US             "stty raw -echo -F "
 #define STTY_DEF            "stty -raw echo -F "
+	#include "sensor_msgs/LaserScan.h"
+	sensor_msgs::LaserScan scan_msg;
 
+void copy(float* src,float* dst)
+{
+	int size = sizeof(src)/sizeof(float);
+	for(int i=0;i<size;i++)
+	{
+		dst[i] = src[i];
+	}
+}
+void debugScan(const sensor_msgs::LaserScan::ConstPtr& msg)
+{
+	scan_msg.header = msg->header;
+	scan_msg.angle_min = msg->angle_min;
+	scan_msg.angle_max = msg->angle_max;
+	scan_msg.angle_increment = msg->angle_increment;
+	scan_msg.time_increment = msg->time_increment;
+	scan_msg.scan_time = msg->scan_time;
+	scan_msg.range_min = msg->range_min;
+	scan_msg.range_max = msg->range_max;
+	scan_msg.ranges = msg->ranges;
+	scan_msg.intensities = msg->intensities;
+//	copy(msg->ranges,scan_msg.ranges);
+//	copy(msg->intensities,scan_msg.intensities);
+}
 static int get_char();
 
 static int get_char()
@@ -35,6 +60,10 @@ int main(int argc, char** argv)
 	ros::init(argc,argv,"node_base_controller");
 	ros::NodeHandle nodeHandle;
 	ros::Publisher odometrySensorPublisher = nodeHandle.advertise<pkg_msgs::MsgOdometrySensor>("topic_odometry_sensor",1000);
+	
+ros::Subscriber scanDebugSub = nodeHandle.subscribe("scan_debug",1000,debugScan);
+ros::Publisher scanDebugPub = nodeHandle.advertise<sensor_msgs::LaserScan>("scan",10);
+
 	pkg_msgs::MsgOdometrySensor odometrySensorMsg;
 	int ch = 0;
     	system(STTY_US TTY_PATH);
@@ -56,8 +85,8 @@ int main(int argc, char** argv)
 	while(ros::ok())
 	{
 		ch = get_char();
-       		if (ch)
-       		{
+       	if (ch)
+       	{
 			switch(ch)
 			{
 			case 3://ctrl+c
@@ -87,9 +116,11 @@ int main(int argc, char** argv)
 	  	sendBuff[0] = 'e';
 		sendBuff[1] = '\r';
 		
+//		fflush(stdin);
+//		usleep(50*1000);
 		char readBuff[100];	
 		int readBytes;
-		basePort.inFlush();
+		basePort.flush();
 		usleep(50*1000);
 		basePort.writePort(sendBuff,2);
 		usleep(50*1000);	
@@ -120,6 +151,7 @@ int main(int argc, char** argv)
 			odometrySensorPublisher.publish(odometrySensorMsg);
 			lastLeftEncoder = curLeftEncoder;
 			lastRightEncoder = curRightEncoder;
+scanDebugPub.publish(scan_msg);
 			}
 		}
 		sleep(1);

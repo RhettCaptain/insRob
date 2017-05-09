@@ -40,7 +40,7 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 		vx = cos(th) * v;
 		vy = sin(th) * v;
 std::cout<<"vl: " << vl << "vr: " <<vr<<std::endl;
-vth = (vr-vl)/0.35;
+vth = (vr-vl)/0.36;
 	//	x += vx * dt;
 	//	y += vy * dt;
 		//th remain 
@@ -117,7 +117,7 @@ ros::Subscriber reviseOdometrySubscriber = n.subscribe("topic_revise_odometry",1
 		x += delta_x;
 		y += delta_y;
 		th += delta_th;
-std::cout << "x: " << x << "y: " << y << std::endl;
+std::cout << "x: " << x << "y: " << y <<"th " << th/degree << std::endl;
 std::cout << "vx: " << vx << "vy: " << vy << std::endl;
 		geometry_msgs::Quaternion odom_quat;	
 		odom_quat = tf::createQuaternionMsgFromRollPitchYaw(0,0,th);

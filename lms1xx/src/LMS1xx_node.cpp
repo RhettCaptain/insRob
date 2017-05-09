@@ -46,7 +46,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "lms1xx");
   ros::NodeHandle nh;
   ros::NodeHandle n("~");
-  ros::Publisher scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 1);
+  ros::Publisher scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan_debug", 1);
 
   n.param<std::string>("host", host, "192.168.0.1");
   n.param<std::string>("frame_id", frame_id, "laser");
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 
     ROS_DEBUG("Commanding continuous measurements.");
     laser.scanContinous(1);
-
+//ros::Rate wait(1);
     while (ros::ok())
     {
       ros::Time start = ros::Time::now();
@@ -194,7 +194,7 @@ int main(int argc, char **argv)
         ROS_ERROR("Laser timed out on delivering scan, attempting to reinitialize.");
         break;
       }
-
+//wait.sleep();
       ros::spinOnce();
     }
 
