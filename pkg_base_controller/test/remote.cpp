@@ -8,7 +8,7 @@
 #define TTY_PATH            "/dev/tty"
 #define STTY_US             "stty raw -echo -F "
 #define STTY_DEF            "stty -raw echo -F "
-	#include "sensor_msgs/LaserScan.h"
+/*	#include "sensor_msgs/LaserScan.h"
 	sensor_msgs::LaserScan scan_msg;
 
 void copy(float* src,float* dst)
@@ -33,7 +33,7 @@ void debugScan(const sensor_msgs::LaserScan::ConstPtr& msg)
 	scan_msg.intensities = msg->intensities;
 //	copy(msg->ranges,scan_msg.ranges);
 //	copy(msg->intensities,scan_msg.intensities);
-}
+}*/
 static int get_char();
 
 static int get_char()
@@ -60,10 +60,10 @@ int main(int argc, char** argv)
 	ros::init(argc,argv,"node_base_controller");
 	ros::NodeHandle nodeHandle;
 	ros::Publisher odometrySensorPublisher = nodeHandle.advertise<pkg_msgs::MsgOdometrySensor>("topic_odometry_sensor",1000);
-	
+/*	
 ros::Subscriber scanDebugSub = nodeHandle.subscribe("scan_debug",1000,debugScan);
 ros::Publisher scanDebugPub = nodeHandle.advertise<sensor_msgs::LaserScan>("scan",10);
-
+*/
 	pkg_msgs::MsgOdometrySensor odometrySensorMsg;
 	int ch = 0;
     	system(STTY_US TTY_PATH);
@@ -151,7 +151,7 @@ ros::Publisher scanDebugPub = nodeHandle.advertise<sensor_msgs::LaserScan>("scan
 			odometrySensorPublisher.publish(odometrySensorMsg);
 			lastLeftEncoder = curLeftEncoder;
 			lastRightEncoder = curRightEncoder;
-scanDebugPub.publish(scan_msg);
+//scanDebugPub.publish(scan_msg);
 			}
 		}
 		sleep(1);
