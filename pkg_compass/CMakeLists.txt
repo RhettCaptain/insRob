@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(pkg_base_controller)
+project(pkg_compass)
 
 ## Add support for C++11, supported in ROS Kinetic and newer
 # add_definitions(-std=c++11)
@@ -103,7 +103,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES pkg_base_controller
+#  LIBRARIES pkg_compass
 #  CATKIN_DEPENDS roscpp std_msgs
 #  DEPENDS system_lib
 )
@@ -111,7 +111,7 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-#SET(COMMON_DIR,"../common")
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
@@ -123,7 +123,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/pkg_base_controller.cpp
+#   src/${PROJECT_NAME}/pkg_compass.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -134,8 +134,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
- add_executable(node_base_controller src/base_controller.cpp ../common/src/SerialPort.cpp)
- add_executable(node_remote test/remote.cpp ../common/src/SerialPort.cpp)
+ add_executable(node_compass src/compass.cpp ../common/src/SerialPort.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -148,13 +147,9 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(node_base_controller
+ target_link_libraries(node_compass
    ${catkin_LIBRARIES}
  )
- target_link_libraries(node_remote
-   ${catkin_LIBRARIES}
- )
- 
 
 #############
 ## Install ##
@@ -196,7 +191,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_pkg_base_controller.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_pkg_compass.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

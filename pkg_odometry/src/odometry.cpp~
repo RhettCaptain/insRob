@@ -9,7 +9,7 @@
 #include <math.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <iostream>
-	#include "sensor_msgs/LaserScan.h"
+
 // position
 double x; 
 double y;
@@ -72,30 +72,7 @@ void reviseOdometry(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& ms
 	lastTime = curTime;
 	
 }
-sensor_msgs::LaserScan scan_msg;
-void copy(float* src,float* dst)
-{
-	int size = sizeof(src)/sizeof(float);
-	for(int i=0;i<size;i++)
-	{
-		dst[i] = src[i];
-	}
-}
-void debugScan(const sensor_msgs::LaserScan::ConstPtr& msg)
-{
-	scan_msg.header = msg->header;
-	scan_msg.angle_min = msg->angle_min;
-	scan_msg.angle_max = msg->angle_max;
-	scan_msg.angle_increment = msg->angle_increment;
-	scan_msg.time_increment = msg->time_increment;
-	scan_msg.scan_time = msg->scan_time;
-	scan_msg.range_min = msg->range_min;
-	scan_msg.range_max = msg->range_max;
-	scan_msg.ranges = msg->ranges;
-	scan_msg.intensities = msg->intensities;
-//	copy(msg->ranges,scan_msg.ranges);
-//	copy(msg->intensities,scan_msg.intensities);
-}
+
 int main(int argc, char** argv) 
 {
     ros::init(argc, argv, "state_publisher");
@@ -104,8 +81,7 @@ int main(int argc, char** argv)
 ros::Subscriber odometrySensorSubscriber = n2.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
 ros::Subscriber reviseOdometrySubscriber = n.subscribe("topic_revise_odometry",1000,reviseOdometry);	//订阅量测修正信息
 	ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 10);
-ros::Subscriber scanDebugSub = n.subscribe("scan_debug",1000,debugScan);
-ros::Publisher scanDebugPub = n.advertise<sensor_msgs::LaserScan>("scan",10);
+
 	// initial position
 	x = 0.0; 
 	y = 0.0;
@@ -178,7 +154,7 @@ std::cout << "vx: " << vx << "vy: " << vy << std::endl;
 		// publishing the odometry and the new tf
 		broadcaster.sendTransform(odom_trans);
 		odom_pub.publish(odom);
-scanDebugPub.publish(scan_msg);
+
 		loop_rate.sleep();
 	}
 	return 0;
