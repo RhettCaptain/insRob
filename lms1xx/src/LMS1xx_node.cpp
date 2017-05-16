@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 
     ROS_DEBUG("Commanding continuous measurements.");
     laser.scanContinous(1);
-//ros::Rate wait(1);
+//ros::Rate wait(20);
     while (ros::ok())
     {
       ros::Time start = ros::Time::now();

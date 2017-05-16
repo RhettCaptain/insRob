@@ -155,7 +155,7 @@ ros::Publisher scanDebugPub = nodeHandle.advertise<sensor_msgs::LaserScan>("scan
 			}
 		}
 		sleep(1);
-//		usleep(800*1000);
+//		usleep(500*1000);
 	}
 }
 

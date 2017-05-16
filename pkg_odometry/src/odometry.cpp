@@ -153,7 +153,7 @@ std::cout << "vx: " << vx << "vy: " << vy << std::endl;
 
 		// publishing the odometry and the new tf
 		broadcaster.sendTransform(odom_trans);
-	//	odom_pub.publish(odom);
+		odom_pub.publish(odom);
 
 		loop_rate.sleep();
 	}
