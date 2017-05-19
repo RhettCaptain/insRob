@@ -62,7 +62,7 @@ vth = (vr-vl)/0.36;
 
 	lastTime = curTime;
 }
-
+/*
 void reviseOdometry(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
 	curTime = ros::Time::now(); 
@@ -71,15 +71,15 @@ void reviseOdometry(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& ms
 	th = tf::getYaw(msg->pose.pose.orientation);
 	lastTime = curTime;
 	
-}
+}*/
 
 int main(int argc, char** argv) 
 {
     ros::init(argc, argv, "state_publisher");
 	ros::NodeHandle n;
 	ros::NodeHandle n2;
-ros::Subscriber odometrySensorSubscriber = n2.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
-ros::Subscriber reviseOdometrySubscriber = n.subscribe("topic_revise_odometry",1000,reviseOdometry);	//订阅量测修正信息
+	ros::Subscriber odometrySensorSubscriber = n2.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
+//ros::Subscriber reviseOdometrySubscriber = n.subscribe("topic_revise_odometry",1000,reviseOdometry);	//订阅量测修正信息
 	ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 10);
 
 	// initial position
