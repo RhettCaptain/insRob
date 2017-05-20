@@ -1,4 +1,4 @@
-PoseWithCovariance poseA
-PoseWithCovariance  poseB
+geometry_msgs/PoseWithCovariance poseA
+geometry_msgs/PoseWithCovariance poseB
 ---
-bool state
+float32 line[3]

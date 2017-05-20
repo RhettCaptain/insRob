@@ -1,10 +1,12 @@
 #include "ros/ros.h"
 #include "pkg_srvs/SrvMode.h"
+#include "pkg_srvs/SrvGetLine.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <string>
 #include <pthread.h>
 #include "pkg_msgs/MsgServerCmd.h"
+
 
 using namespace std;
 
@@ -106,11 +108,27 @@ bool changeMode(pkg_srvs::SrvMode::Request &req,pkg_srvs::SrvMode::Response &res
 
 }
 
+bool getLine(pkg_srvs::SrvGetLine::Request &req,pkg_srvs::SrvGetLine::Response &res)
+{
+	double x1, y1, x2, y2;
+	x1=req.poseA.pose.position.x;
+	y1=req.poseA.pose.position.y;	
+	x2=req.poseB.pose.position.x;
+	y2=req.poseB.pose.position.y;
+	res.line[0]=y2-y1;
+  	res.line[1]=x1-x2;
+	res.line[2]=x2*y1-x1*y2;
+  	return true;
+}
+
+
+
 int main(int argc, char** argv)
 {
 	ros::init(argc,argv,"node_server");
 	ros::NodeHandle nodeHandle;
 	ros::ServiceServer modeService = nodeHandle.advertiseService("srv_mode",changeMode);
+	ros::ServiceServer getLineService = nodeHandle.advertiseService("srv_get_line",getLine);
 	cmdPublisher = nodeHandle.advertise<pkg_msgs::MsgServerCmd>("topic_server_cmd",1000);
 	ros::spin();
 	return 0;
