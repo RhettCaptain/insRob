@@ -18,6 +18,16 @@ float vth;
 //odom-map转换监听，并发布odom的地图坐标
 void transOdom(const tf::TransformListener& listener)
 {
+	geometry_msgs::PoseStamped odomPose,mapPose;
+	odomPose.header.stamp = ros::Time();
+	odomPose.header.frame_id = "odom";
+	odomPose.pose.position.x = x;
+	odomPose.pose.position.y = y;
+	odomPose.pose.position.z = 0;
+	odomPose.pose.orientation = tf::createQuaternionMsgFromYaw(th);
+	//转换
+	listener.transformPose("map",odomPose,mapPose);
+	
 	
 }
 

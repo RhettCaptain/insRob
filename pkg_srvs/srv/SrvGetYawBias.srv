@@ -1,0 +1,4 @@
+float32[3] line
+geometry_msgs/PoseWithCovariance pose
+---
+float32 theta

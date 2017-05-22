@@ -6,6 +6,13 @@
 #include <string>
 #include <pthread.h>
 #include "pkg_msgs/MsgServerCmd.h"
+#include "pkg_srvs/SrvGetDistance.h"
+#include "pkg_srvs/SrvPointLine.h"
+#include "pkg_srvs/SrvGetYawBias.h"
+#include <math.h>
+#include <tf/transform_broadcaster.h>
+
+
 
 
 using namespace std;
@@ -121,6 +128,51 @@ bool getLine(pkg_srvs::SrvGetLine::Request &req,pkg_srvs::SrvGetLine::Response &
   	return true;
 }
 
+bool pointLine(pkg_srvs::SrvPointLine::Request &req, pkg_srvs::SrvPointLine::Response &res)
+{
+	double x,y,a,b,c;
+	x=req.pose.pose.position.x;
+	y=req.pose.pose.position.y;
+	a=req.line[0];
+	b=req.line[1];
+	c=req.line[2];
+	res.distance=(a*x + b*y + c)/ sqrt(a*a + b*b);
+  	return true;
+}
+
+
+bool getYawBias(pkg_srvs::SrvGetYawBias::Request  &req, pkg_srvs::SrvGetYawBias::Response &res)
+{
+	double a,b,c,thetaline,bias;
+	a=req.line[0];
+	b=req.line[1];
+	c=req.line[2];
+  	bias=tf::getYaw(req.pose.pose.orientation);
+	double k;
+    	if (b != 0)
+   	{
+		k = -a / b;
+		thetaline = atan(k);
+  	}
+ 	else
+   	{
+		thetaline = M_PI / 2;
+    	}
+    	res.theta=bias - thetaline;
+  	return true;
+}
+
+bool getDistance(pkg_srvs::SrvGetDistance::Request  &req, pkg_srvs::SrvGetDistance::Response &res)
+{
+	double x1,y1,x2,y2;
+	x1=req.poseA.pose.position.x;
+	y1=req.poseA.pose.position.y;	
+	x2=req.poseB.pose.position.x;
+	y2=req.poseB.pose.position.y;
+	res.distance=sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
+ 
+  	return true;
+}
 
 
 int main(int argc, char** argv)
@@ -129,6 +181,9 @@ int main(int argc, char** argv)
 	ros::NodeHandle nodeHandle;
 	ros::ServiceServer modeService = nodeHandle.advertiseService("srv_mode",changeMode);
 	ros::ServiceServer getLineService = nodeHandle.advertiseService("srv_get_line",getLine);
+	ros::ServiceServer pointLineService = nodeHandle.advertiseService("srv_point_line",pointLine);
+	ros::ServiceServer getYawBiasService = nodeHandle.advertiseService("srv_get_yaw_bias",getYawBias);
+	ros::ServiceServer getDistanceService = nodeHandle.advertiseService("srv_get_distance",getDistance);
 	cmdPublisher = nodeHandle.advertise<pkg_msgs::MsgServerCmd>("topic_server_cmd",1000);
 	ros::spin();
 	return 0;

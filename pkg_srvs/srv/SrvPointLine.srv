@@ -1,0 +1,4 @@
+geometry_msgs/PoseWithCovariance pose
+float32[3] line
+---
+float32 distance
