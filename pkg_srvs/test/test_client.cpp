@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 	ros::init(argc,argv,"node_test_client");
 	ros::NodeHandle nodeHandle;
 	//test mode
-	/* 
+	
 	ros::ServiceClient testModeClient = nodeHandle.serviceClient<pkg_srvs::SrvMode>("srv_mode");
 	pkg_srvs::SrvMode modeService;
 	modeService.request.cmd = "";
@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 	{
 		ROS_INFO("modeService state:%d",modeService.response.state);
 	}
-	*/
+	
 	//test getline
 	/*
 	ros::ServiceClient testGetLineClient = nodeHandle.serviceClient<pkg_srvs::SrvGetLine>("srv_get_line");
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 	}
 	*/
 	//test getDistance
-	
+	/*
         ros::ServiceClient testGetDistanceClient = nodeHandle.serviceClient<pkg_srvs::SrvGetDistance>("srv_get_distance");
 	pkg_srvs::SrvGetDistance getDistanceService;
 	geometry_msgs::PoseWithCovariance poseA,poseB;
@@ -86,7 +86,7 @@ int main(int argc, char** argv)
 	{
 		ROS_INFO("getDistanceService distance:%f",getDistanceService.response.distance);
 	}
-	
+	*/
 
 	return 0;
 }

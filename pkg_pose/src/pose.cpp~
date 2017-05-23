@@ -8,12 +8,12 @@
 ros::Publisher reviseOdometryPublisher;
 ros::Publisher robotPosePublisher;
 
-float x;
-float y;
-float th;
-float vx;
-float vy;
-float vth;
+float odomX;
+float odomY;
+float odomTh;
+float odomVx;
+float odomVy;
+float odomVth;
 
 //odom-map转换监听，并发布odom的地图坐标
 void transOdom(const tf::TransformListener& listener)
@@ -21,25 +21,30 @@ void transOdom(const tf::TransformListener& listener)
 	geometry_msgs::PoseStamped odomPose,mapPose;
 	odomPose.header.stamp = ros::Time();
 	odomPose.header.frame_id = "odom";
-	odomPose.pose.position.x = x;
-	odomPose.pose.position.y = y;
+	odomPose.pose.position.x = odomX;
+	odomPose.pose.position.y = odomY;
 	odomPose.pose.position.z = 0;
-	odomPose.pose.orientation = tf::createQuaternionMsgFromYaw(th);
+	odomPose.pose.orientation = tf::createQuaternionMsgFromYaw(odomTh);
 	//转换
-	tf::transformPose("map",odomPose,mapPose);
-	
+	listener.transformPose("map",odomPose,mapPose);
+	//发布
+	geometry_msgs::PoseWithCovarianceStamped robotPose;
+	robotPose.header.stamp = ros::Time();
+	robotPose.header.frame_id = "map";
+	robotPose.pose = mapPose.pose;
+	robotPosePublisher.publish(robotPose);
 	
 }
 
 //odometry数据更新
 void handleOdom(const nav_msgs::Odometry::ConstPtr& msg)
 {
-	x = msg->pose.pose.position.x;
-	y = msg->pose.pose.position.y;
-	th = tf::getYaw(msg->pose.pose.orientation);
-	vx = msg->twist.twist.linear.x;
-	vy = msg->twist.twist.linear.y;
-	vth = msg->twist.twist.angular.z;
+	odomX = msg->pose.pose.position.x;
+	odomY = msg->pose.pose.position.y;
+	odomTh = tf::getYaw(msg->pose.pose.orientation);
+	odomVx = msg->twist.twist.linear.x;
+	odomVy = msg->twist.twist.linear.y;
+	odomVth = msg->twist.twist.angular.z;
 }
 
 //amcl数据直接发布
