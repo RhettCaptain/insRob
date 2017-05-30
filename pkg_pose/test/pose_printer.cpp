@@ -14,7 +14,7 @@ void handleOdom(const nav_msgs::Odometry::ConstPtr& msg)
 	printf("get odom data:x%f,y%f,th%f\n",x,y,th);
 }
 
-//正常输出robot_pose
+//amcl数据处理函数
 void handleAmcl(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
 	float x = msg->pose.pose.position.x;
@@ -23,7 +23,7 @@ void handleAmcl(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	printf("get robot pose data:x%f,y%f,th%f\n",x,y,th);
 }
 
-//amcl数据处理函数
+//正常输出robot_pose
 void handlePose(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
 	float x = msg->pose.pose.position.x;
@@ -41,19 +41,19 @@ int main(int argc, char** argv)
 	ros::Subscriber poseSubscriber;
 	if(argc>1)
 	{
-		if(argv[1] == "amcl")
+		if(strcmp(argv[1],"amcl") == 0)
 		{
 			amclSubscriber = nodeHandle.subscribe("amcl_pose",1000,handleAmcl);
 		}
-		else if(argv[1] == "odom")
+		else if(strcmp(argv[1],"odom") == 0)
 		{
 			odomSubscriber = nodeHandle.subscribe("odom",1000,handleOdom);
 		}
-		else if(argv[1] == "pose")
+		else if(strcmp(argv[1],"pose") == 0)
 		{
 			poseSubscriber = nodeHandle.subscribe("topic_robot_pose",1000,handlePose);
 		}
-		else if(argv[1] == "all")
+		else if(strcmp(argv[1],"all") == 0)
 		{
 			amclSubscriber = nodeHandle.subscribe("amcl_pose",1000,handleAmcl);
 			odomSubscriber = nodeHandle.subscribe("odom",1000,handleOdom);
@@ -62,6 +62,7 @@ int main(int argc, char** argv)
 		else
 		{
 			ROS_INFO("please input correct parameter!");
+			exit(0);
 		}
 	}
 	else
