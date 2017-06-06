@@ -18,7 +18,6 @@ float odomVth;
 //odom-map转换监听，并发布odom的地图坐标
 void transOdom(const tf::TransformListener& listener)
 {
-	printf("get odom-map TF\n");
 	geometry_msgs::PoseStamped odomPose,mapPose;
 	odomPose.header.stamp = ros::Time();
 	odomPose.header.frame_id = "odom";
@@ -77,6 +76,8 @@ int main(int argc, char** argv)
 	ros::Subscriber odomSubscriber = nodeHandle.subscribe("odom",1000,handleOdom);		//订阅量测法数据
 	ros::Subscriber amclSubscriber = nodeHandle.subscribe("amcl_pose",1000,handleAmcl);	//订阅激光定位数据
 	robotPosePublisher = nodeHandle.advertise<geometry_msgs::PoseWithCovarianceStamped>("topic_robot_pose",1000);	//发布量测修正信息
+	tf::TransformListener listener(ros::Duration(10));
+	ros::Timer timer = nodeHandle.createTimer(ros::Duration(1.0),boost::bind(&transOdom, boost::ref(listener)));
 //	reviseOdometryPublisher = nodeHandle.advertise<geometry_msgs::PoseWithCovarianceStamped>("topic_revise_odometry",1000);	//发布量测修正信息	
 	ros::spin();
 }

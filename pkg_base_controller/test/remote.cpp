@@ -142,7 +142,7 @@ ros::Publisher scanDebugPub = nodeHandle.advertise<sensor_msgs::LaserScan>("scan
 			curLeftEncoder = atoi(strtok(chaTmp," "));
 			curRightEncoder = atoi(strtok(NULL," "));
 			cout << curLeftEncoder << "-" << curRightEncoder<<"\r\n";
-			double ratio = 0.00033;// * M_PI * 0.05 / 200; 
+			double ratio = 0.00066;// * M_PI * 0.05 / 200; 
 			odometrySensorMsg.vlf = (curLeftEncoder - lastLeftEncoder)*ratio;
 			odometrySensorMsg.vlb = (curLeftEncoder - lastLeftEncoder)*ratio;
 			odometrySensorMsg.vrf = (curRightEncoder - lastRightEncoder)*ratio;

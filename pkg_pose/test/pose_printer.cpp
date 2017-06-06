@@ -1,7 +1,9 @@
 #include "ros/ros.h"
 #include "nav_msgs/Odometry.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include <cmath>
 
+const double arc2deg = 180/M_PI;
 //odometry数据处理函数
 void handleOdom(const nav_msgs::Odometry::ConstPtr& msg)
 {
@@ -11,7 +13,7 @@ void handleOdom(const nav_msgs::Odometry::ConstPtr& msg)
 	float vx = msg->twist.twist.linear.x;
 	float vy = msg->twist.twist.linear.y;
 	float vth = msg->twist.twist.angular.z;
-	printf("get odom data:x%f,y%f,th%f\n",x,y,th);
+	printf("get odom data:x%f,y%f,th%f\n",x,y,th*arc2deg);
 }
 
 //amcl数据处理函数
@@ -20,7 +22,7 @@ void handleAmcl(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	float x = msg->pose.pose.position.x;
 	float y = msg->pose.pose.position.y;
 	float th = msg->pose.pose.orientation.z;
-	printf("get amcl data:x%f,y%f,th%f\n",x,y,th);
+	printf("get amcl data:x%f,y%f,th%f\n",x,y,th*arc2deg);
 }
 
 //正常输出robot_pose
@@ -29,7 +31,7 @@ void handlePose(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	float x = msg->pose.pose.position.x;
 	float y = msg->pose.pose.position.y;
 	float th = msg->pose.pose.orientation.z;
-	printf("get robot pose data:x%f,y%f,th%f\n",x,y,th);
+	printf("get robot pose data:x%f,y%f,th%f\n",x,y,th*arc2deg);
 }
 
 int main(int argc, char** argv)
