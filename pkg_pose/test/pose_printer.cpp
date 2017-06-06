@@ -20,7 +20,7 @@ void handleAmcl(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	float x = msg->pose.pose.position.x;
 	float y = msg->pose.pose.position.y;
 	float th = msg->pose.pose.orientation.z;
-	printf("get robot pose data:x%f,y%f,th%f\n",x,y,th);
+	printf("get amcl data:x%f,y%f,th%f\n",x,y,th);
 }
 
 //正常输出robot_pose
@@ -29,7 +29,7 @@ void handlePose(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	float x = msg->pose.pose.position.x;
 	float y = msg->pose.pose.position.y;
 	float th = msg->pose.pose.orientation.z;
-	printf("get amcl data:x%f,y%f,th%f\n",x,y,th);
+	printf("get robot pose data:x%f,y%f,th%f\n",x,y,th);
 }
 
 int main(int argc, char** argv)

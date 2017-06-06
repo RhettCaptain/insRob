@@ -18,6 +18,7 @@ float odomVth;
 //odom-map转换监听，并发布odom的地图坐标
 void transOdom(const tf::TransformListener& listener)
 {
+	printf("get odom-map TF\n");
 	geometry_msgs::PoseStamped odomPose,mapPose;
 	odomPose.header.stamp = ros::Time();
 	odomPose.header.frame_id = "odom";
@@ -26,13 +27,17 @@ void transOdom(const tf::TransformListener& listener)
 	odomPose.pose.position.z = 0;
 	odomPose.pose.orientation = tf::createQuaternionMsgFromYaw(odomTh);
 	//转换
-	listener.transformPose("map",odomPose,mapPose);
-	//发布
-	geometry_msgs::PoseWithCovarianceStamped robotPose;
-	robotPose.header.stamp = ros::Time();
-	robotPose.header.frame_id = "map";
-	robotPose.pose.pose = mapPose.pose;
-	robotPosePublisher.publish(robotPose);
+	try{
+		listener.transformPose("map",odomPose,mapPose);
+		//发布
+		geometry_msgs::PoseWithCovarianceStamped robotPose;
+		robotPose.header.stamp = ros::Time();
+		robotPose.header.frame_id = "map";
+		robotPose.pose.pose = mapPose.pose;
+		robotPosePublisher.publish(robotPose);
+	}
+	catch(tf::TransformException& ex){
+	}
 	
 }
 
