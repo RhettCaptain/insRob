@@ -13,7 +13,7 @@ int main(int argc, char** argv)
 	ros::Time curTime = ros::Time::now();
 	ros::Time lastTime = ros::Time::now();
 	pkg_msgs::MsgOdometrySensor odometrySensorMsg;
-	double ratio = 0.00033;// * M_PI * 0.05 / 200; //编码器+1对应的距离
+	const double ratio = 0.00033;// * M_PI * 0.05 / 200; //编码器+1对应的距离
 	SerialPort basePort = *(new SerialPort("/dev/ttyACM0"));
 	basePort.openPort();
 	basePort.setPort(115200,8,1,'n');

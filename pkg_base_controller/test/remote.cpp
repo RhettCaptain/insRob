@@ -64,6 +64,8 @@ int main(int argc, char** argv)
 ros::Subscriber scanDebugSub = nodeHandle.subscribe("scan_debug",1000,debugScan);
 ros::Publisher scanDebugPub = nodeHandle.advertise<sensor_msgs::LaserScan>("scan",10);
 */
+    ros::Time curTime = ros::Time::now();
+	ros::Time lastTime = ros::Time::now();
 	pkg_msgs::MsgOdometrySensor odometrySensorMsg;
 	int ch = 0;
     	system(STTY_US TTY_PATH);
@@ -82,6 +84,7 @@ ros::Publisher scanDebugPub = nodeHandle.advertise<sensor_msgs::LaserScan>("scan
 	char moveBack[20] = "z -10 -10\r";
 	char moveLeft[20] = "z -10 10\r";
 	char moveRight[20] = "z 10 -10\r";
+	const double ratio = 0.00066;// * M_PI * 0.05 / 200; //编码器+1距离 
 	while(ros::ok())
 	{
 		ch = get_char();
@@ -142,15 +145,18 @@ ros::Publisher scanDebugPub = nodeHandle.advertise<sensor_msgs::LaserScan>("scan
 			curLeftEncoder = atoi(strtok(chaTmp," "));
 			curRightEncoder = atoi(strtok(NULL," "));
 			cout << curLeftEncoder << "-" << curRightEncoder<<"\r\n";
-			double ratio = 0.00066;// * M_PI * 0.05 / 200; 
-			odometrySensorMsg.vlf = (curLeftEncoder - lastLeftEncoder)*ratio;
-			odometrySensorMsg.vlb = (curLeftEncoder - lastLeftEncoder)*ratio;
-			odometrySensorMsg.vrf = (curRightEncoder - lastRightEncoder)*ratio;
-			odometrySensorMsg.vrb = (curRightEncoder - lastRightEncoder)*ratio;
+			
+			curTime = ros::Time::now();
+			double dt = (curTime - lastTime).toSec();
+			odometrySensorMsg.vlf = (curLeftEncoder - lastLeftEncoder)*ratio/dt;
+			odometrySensorMsg.vlb = (curLeftEncoder - lastLeftEncoder)*ratio/dt;
+			odometrySensorMsg.vrf = (curRightEncoder - lastRightEncoder)*ratio/dt;
+			odometrySensorMsg.vrb = (curRightEncoder - lastRightEncoder)*ratio/dt;
 			odometrySensorMsg.type="ODOMETER";
 			odometrySensorPublisher.publish(odometrySensorMsg);
 			lastLeftEncoder = curLeftEncoder;
 			lastRightEncoder = curRightEncoder;
+			lastTime = curTime;
 //scanDebugPub.publish(scan_msg);
 			}
 		}
