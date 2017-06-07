@@ -10,7 +10,10 @@ int main(int argc, char** argv)
 	ros::init(argc,argv,"node_base_controller");
 	ros::NodeHandle nodeHandle;
 	ros::Publisher odometrySensorPublisher = nodeHandle.advertise<pkg_msgs::MsgOdometrySensor>("topic_odometry_sensor",1000);
+	ros::Time curTime = ros::Time::now();
+	ros::Time lastTime = ros::Time::now();
 	pkg_msgs::MsgOdometrySensor odometrySensorMsg;
+	double ratio = 0.00033;// * M_PI * 0.05 / 200; //编码器+1对应的距离
 	SerialPort basePort = *(new SerialPort("/dev/ttyACM0"));
 	basePort.openPort();
 	basePort.setPort(115200,8,1,'n');
@@ -27,7 +30,6 @@ int main(int argc, char** argv)
 	lastRightEncoder =0;
 	while(ros::ok())
 	{
-//		cout << "ai" << endl;
 //		cin >> sendBuff;
 	  	sendBuff[0] = 'e';
 		sendBuff[1] = '\r';
@@ -55,15 +57,18 @@ int main(int argc, char** argv)
 			curLeftEncoder = atoi(strtok(chaTmp," "));
 			curRightEncoder = atoi(strtok(NULL," "));
 			cout << curLeftEncoder << "-" << curRightEncoder<<endl;
-			double ratio = 0.00033;// * M_PI * 0.05 / 200; 
-			odometrySensorMsg.vlf = (curLeftEncoder - lastLeftEncoder)*ratio;
-			odometrySensorMsg.vlb = (curLeftEncoder - lastLeftEncoder)*ratio;
-			odometrySensorMsg.vrf = (curRightEncoder - lastRightEncoder)*ratio;
-			odometrySensorMsg.vrb = (curRightEncoder - lastRightEncoder)*ratio;
+			
+			curTime = ros::Time::now();
+			double dt = (curTime - lastTime).toSec();
+			odometrySensorMsg.vlf = (curLeftEncoder - lastLeftEncoder)*ratio/dt;
+			odometrySensorMsg.vlb = (curLeftEncoder - lastLeftEncoder)*ratio/dt;
+			odometrySensorMsg.vrf = (curRightEncoder - lastRightEncoder)*ratio/dt;
+			odometrySensorMsg.vrb = (curRightEncoder - lastRightEncoder)*ratio/dt;
 			odometrySensorMsg.type="ODOMETER";
 			odometrySensorPublisher.publish(odometrySensorMsg);
 			lastLeftEncoder = curLeftEncoder;
 			lastRightEncoder = curRightEncoder;
+			lastTime = curTime;
 		}
 //		delay(500);		
 //		sleep(1);

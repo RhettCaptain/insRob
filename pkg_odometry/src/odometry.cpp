@@ -22,10 +22,12 @@ double vth;
 
 ros::Time curTime;
 ros::Time lastTime;
-	
+
+const double wheelDis = 0.36;
 void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 {
-	curTime = ros::Time::now(); 
+	
+	 
 	//读取、判断、更新最新数据
 	if(msg->type == "ODOMETER")
 	{	
@@ -36,18 +38,18 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 		double vl = (vlf+vlb)/2;
 		double vr = (vrf+vrb)/2;
 		double v = (vl+vr)/2;
-		double dt = (curTime - lastTime).toSec();
+	//	double dt = (curTime - lastTime).toSec();
 		vx = cos(th) * v;
 		vy = sin(th) * v;
 std::cout<<"vl: " << vl << "vr: " <<vr<<std::endl;
-vth = (vr-vl)/0.36;
+		vth = (vr-vl)/wheelDis;
 	//	x += vx * dt;
 	//	y += vy * dt;
 		//th remain 
 	}
 	else if(msg->type == "COMPASS")
 	{
-		double dt = (curTime - lastTime).toSec();
+		double dt = (curTime - lastTime).toSec();	//可能有问题
 		//vx remain
 		//vy remain
 		vth = (msg->th - th)/dt;
@@ -59,8 +61,8 @@ vth = (vr-vl)/0.36;
 	{
 		//TO DO
 	}
-
-	lastTime = curTime;
+	
+	
 }
 /*
 void reviseOdometry(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
@@ -99,7 +101,7 @@ int main(int argc, char** argv)
 	tf::TransformBroadcaster broadcaster;
 	ros::Rate loop_rate(20);
 
-	const double degree = M_PI/180;
+	const double arc2deg = M_PI/180;
 
 	// message declarations
 	geometry_msgs::TransformStamped odom_trans;
@@ -110,14 +112,16 @@ int main(int argc, char** argv)
 		curTime = ros::Time::now(); 
         	ros::spinOnce();
 		double dt = (curTime - lastTime).toSec();
-		double delta_x = (vx * cos(th) - vy * sin(th)) * dt;
-		double delta_y = (vx * sin(th) + vy * cos(th)) * dt;
+		double delta_x = vx * dt;
+		double delta_y = vy * dt;
+	//	double delta_x = (vx * cos(th) - vy * sin(th)) * dt;
+	//	double delta_y = (vx * sin(th) + vy * cos(th)) * dt;
 		double delta_th = vth * dt;
-
+		lastTime = curTime;
 		x += delta_x;
 		y += delta_y;
 		th += delta_th;
-std::cout << "x: " << x << "y: " << y <<"th " << th/degree << std::endl;
+std::cout << "x: " << x << "y: " << y <<"th " << th / arc2deg << std::endl;
 std::cout << "vx: " << vx << "vy: " << vy << std::endl;
 		geometry_msgs::Quaternion odom_quat;	
 		odom_quat = tf::createQuaternionMsgFromRollPitchYaw(0,0,th);
@@ -156,6 +160,8 @@ std::cout << "vx: " << vx << "vy: " << vy << std::endl;
 		odom_pub.publish(odom);
 
 		loop_rate.sleep();
+
+		
 	}
 	return 0;
 
