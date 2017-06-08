@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 	ros::init(argc,argv,"node_test_client");
 	ros::NodeHandle nodeHandle;
 	//test mode
-	
+	/*
 	ros::ServiceClient testModeClient = nodeHandle.serviceClient<pkg_srvs::SrvMode>("srv_mode");
 	pkg_srvs::SrvMode modeService;
 	modeService.request.cmd = "";
@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 	{
 		ROS_INFO("modeService state:%d",modeService.response.state);
 	}
-	
+	*/
 	//test getline
 	/*
 	ros::ServiceClient testGetLineClient = nodeHandle.serviceClient<pkg_srvs::SrvGetLine>("srv_get_line");
@@ -56,21 +56,23 @@ int main(int argc, char** argv)
 	}
 	*/
 	//test getYawBias
-	/*
+	
         ros::ServiceClient testGetYawBiasClient = nodeHandle.serviceClient<pkg_srvs::SrvGetYawBias>("srv_get_yaw_bias");
 	pkg_srvs::SrvGetYawBias getYawBiasService;
-	geometry_msgs::PoseWithCovariance pose;
-	double line[3] = {-1,1,0};
-	pose.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);;
-	getYawBiasService.request.pose = pose;
-	getYawBiasService.request.line[0] = line[0];
-	getYawBiasService.request.line[1] = line[1];
-	getYawBiasService.request.line[2] = line[2];
+	geometry_msgs::PoseWithCovariance poseA,poseB,poseC;
+	poseA.pose.position.x = 1;
+	poseA.pose.position.y = 3;
+	poseB.pose.position.x = 3;
+	poseB.pose.position.y = -1;
+	poseC.pose.orientation = tf::createQuaternionMsgFromYaw(2*M_PI/3);
+	getYawBiasService.request.poseA = poseA;
+	getYawBiasService.request.poseB = poseB;
+	getYawBiasService.request.poseC = poseC;
 	if(testGetYawBiasClient.call(getYawBiasService))
 	{
 		ROS_INFO("getYawBiasService theta:%f",getYawBiasService.response.theta);
 	}
-	*/
+	
 	//test getDistance
 	/*
         ros::ServiceClient testGetDistanceClient = nodeHandle.serviceClient<pkg_srvs::SrvGetDistance>("srv_get_distance");

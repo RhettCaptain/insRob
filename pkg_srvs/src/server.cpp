@@ -143,6 +143,30 @@ bool pointLine(pkg_srvs::SrvPointLine::Request &req, pkg_srvs::SrvPointLine::Res
 
 bool getYawBias(pkg_srvs::SrvGetYawBias::Request  &req, pkg_srvs::SrvGetYawBias::Response &res)
 {
+	double x1, y1, x2, y2,bias;
+	x1=req.poseA.pose.position.x;
+	y1=req.poseA.pose.position.y;	
+	x2=req.poseB.pose.position.x;
+	y2=req.poseB.pose.position.y;
+        bias=tf::getYaw(req.poseC.pose.orientation);
+        double x, y,x0,y0;
+	x = x2 - x1;
+	y = y2 - y1;
+	x0 = 1; y0 = 0;
+	double ab, aa, bb, cosr, ltheta, linetheta, yaws;
+	ab = x * x0 + y * y0;
+	aa = sqrt(x * x + y * y);
+	bb = sqrt(x0 * x0 + y0  * y0);
+	cosr = ab / aa / bb;
+	ltheta = acos(cosr);
+	if (y<0)
+		linetheta = 2 * M_PI - ltheta;
+	else
+		linetheta = ltheta;
+		
+	res.theta= bias - linetheta;
+	return true;
+/*
 	double a,b,c,thetaline,bias;
 	a=req.line[0];
 	b=req.line[1];
@@ -159,7 +183,7 @@ bool getYawBias(pkg_srvs::SrvGetYawBias::Request  &req, pkg_srvs::SrvGetYawBias:
 		thetaline = M_PI / 2;
     	}
     	res.theta=bias - thetaline;
-  	return true;
+  	return true;*/
 }
 
 bool getDistance(pkg_srvs::SrvGetDistance::Request  &req, pkg_srvs::SrvGetDistance::Response &res)
