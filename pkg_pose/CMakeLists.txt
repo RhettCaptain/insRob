@@ -135,7 +135,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
  add_executable(node_pose src/pose.cpp)
  add_executable(node_pose_printer test/pose_printer.cpp)
-
+ add_executable(node_slam_pose test/slam_pose.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -151,6 +151,9 @@ include_directories(
    ${catkin_LIBRARIES}
  )
  target_link_libraries(node_pose_printer
+   ${catkin_LIBRARIES}
+ )
+ target_link_libraries(node_slam_pose
    ${catkin_LIBRARIES}
  )
 #############
