@@ -3,10 +3,13 @@
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include <geometry_msgs/PointStamped.h>		
 #include <tf/transform_broadcaster.h>
-#include <tf/transform_listener.h>			
+#include <tf/transform_listener.h>	
+#include <cmath>		
 
 ros::Publisher reviseOdometryPublisher;
 ros::Publisher robotPosePublisher;
+
+const double arc2deg = 180/M_PI;
 
 float odomX;
 float odomY;
@@ -26,13 +29,17 @@ void transOdom(const tf::TransformListener& listener)
 	odomPose.pose.position.z = 0;
 	odomPose.pose.orientation = tf::createQuaternionMsgFromYaw(odomTh);
 	//转换
-	listener.transformPose("map",odomPose,mapPose);
-	//发布
-	geometry_msgs::PoseWithCovarianceStamped robotPose;
-	robotPose.header.stamp = ros::Time();
-	robotPose.header.frame_id = "map";
-	robotPose.pose = mapPose.pose;
-	robotPosePublisher.publish(robotPose);
+	try{
+		listener.transformPose("map",odomPose,mapPose);
+		//发布
+		geometry_msgs::PoseWithCovarianceStamped robotPose;
+		robotPose.header.stamp = ros::Time();
+		robotPose.header.frame_id = "map";
+		robotPose.pose.pose = mapPose.pose;
+		robotPosePublisher.publish(robotPose);
+	}
+	catch(tf::TransformException& ex){
+	}
 	
 }
 
@@ -45,6 +52,7 @@ void handleOdom(const nav_msgs::Odometry::ConstPtr& msg)
 	odomVx = msg->twist.twist.linear.x;
 	odomVy = msg->twist.twist.linear.y;
 	odomVth = msg->twist.twist.angular.z;
+printf("odomTh:%f\n",odomTh * arc2deg);
 }
 
 //amcl数据直接发布
@@ -72,6 +80,8 @@ int main(int argc, char** argv)
 	ros::Subscriber odomSubscriber = nodeHandle.subscribe("odom",1000,handleOdom);		//订阅量测法数据
 	ros::Subscriber amclSubscriber = nodeHandle.subscribe("amcl_pose",1000,handleAmcl);	//订阅激光定位数据
 	robotPosePublisher = nodeHandle.advertise<geometry_msgs::PoseWithCovarianceStamped>("topic_robot_pose",1000);	//发布量测修正信息
+	tf::TransformListener listener(ros::Duration(10));
+	ros::Timer timer = nodeHandle.createTimer(ros::Duration(1.0),boost::bind(&transOdom, boost::ref(listener)));
 //	reviseOdometryPublisher = nodeHandle.advertise<geometry_msgs::PoseWithCovarianceStamped>("topic_revise_odometry",1000);	//发布量测修正信息	
 	ros::spin();
 }

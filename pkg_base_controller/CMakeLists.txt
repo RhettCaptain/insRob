@@ -136,7 +136,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
  add_executable(node_base_controller src/base_controller.cpp ../common/src/SerialPort.cpp)
  add_executable(node_remote test/remote.cpp ../common/src/SerialPort.cpp)
-
+ add_executable(node_fakeOdomPub test/fakeOdomPub.cpp )
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -152,6 +152,9 @@ include_directories(
    ${catkin_LIBRARIES}
  )
  target_link_libraries(node_remote
+   ${catkin_LIBRARIES}
+ )
+ target_link_libraries(node_fakeOdomPub
    ${catkin_LIBRARIES}
  )
  

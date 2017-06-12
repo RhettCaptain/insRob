@@ -2,6 +2,7 @@
 #include "nav_msgs/Odometry.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include <cmath>
+#include <tf/transform_broadcaster.h>
 
 const double arc2deg = 180/M_PI;
 //odometry数据处理函数
@@ -9,7 +10,7 @@ void handleOdom(const nav_msgs::Odometry::ConstPtr& msg)
 {
 	float x = msg->pose.pose.position.x;
 	float y = msg->pose.pose.position.y;
-	float th = msg->pose.pose.orientation.z;
+	float th = tf::getYaw(msg->pose.pose.orientation);
 	float vx = msg->twist.twist.linear.x;
 	float vy = msg->twist.twist.linear.y;
 	float vth = msg->twist.twist.angular.z;
@@ -21,7 +22,7 @@ void handleAmcl(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
 	float x = msg->pose.pose.position.x;
 	float y = msg->pose.pose.position.y;
-	float th = msg->pose.pose.orientation.z;
+	float th = tf::getYaw(msg->pose.pose.orientation);
 	printf("get amcl data:x%f,y%f,th%f\n",x,y,th*arc2deg);
 }
 
@@ -30,7 +31,7 @@ void handlePose(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
 	float x = msg->pose.pose.position.x;
 	float y = msg->pose.pose.position.y;
-	float th = msg->pose.pose.orientation.z;
+	float th = tf::getYaw(msg->pose.pose.orientation);
 	printf("get robot pose data:x%f,y%f,th%f\n",x,y,th*arc2deg);
 }
 

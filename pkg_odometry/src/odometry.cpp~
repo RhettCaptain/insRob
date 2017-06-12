@@ -26,8 +26,6 @@ ros::Time lastTime;
 const double wheelDis = 0.36;
 void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 {
-	
-	 
 	//读取、判断、更新最新数据
 	if(msg->type == "ODOMETER")
 	{	
@@ -61,27 +59,15 @@ std::cout<<"vl: " << vl << "vr: " <<vr<<std::endl;
 	{
 		//TO DO
 	}
-	
-	
 }
-/*
-void reviseOdometry(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
-{
-	curTime = ros::Time::now(); 
-	x = msg->pose.pose.position.x;
-	y = msg->pose.pose.position.y;
-	th = tf::getYaw(msg->pose.pose.orientation);
-	lastTime = curTime;
-	
-}*/
+
 
 int main(int argc, char** argv) 
 {
-    ros::init(argc, argv, "state_publisher");
+    	ros::init(argc, argv, "state_publisher");
 	ros::NodeHandle n;
 	ros::NodeHandle n2;
 	ros::Subscriber odometrySensorSubscriber = n2.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
-//ros::Subscriber reviseOdometrySubscriber = n.subscribe("topic_revise_odometry",1000,reviseOdometry);	//订阅量测修正信息
 	ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 10);
 
 	// initial position
@@ -101,7 +87,7 @@ int main(int argc, char** argv)
 	tf::TransformBroadcaster broadcaster;
 	ros::Rate loop_rate(20);
 
-	const double arc2deg = M_PI/180;
+	const double arc2deg = 180/M_PI;
 
 	// message declarations
 	geometry_msgs::TransformStamped odom_trans;
@@ -121,7 +107,16 @@ int main(int argc, char** argv)
 		x += delta_x;
 		y += delta_y;
 		th += delta_th;
-std::cout << "x: " << x << "y: " << y <<"th " << th/arc2deg << std::endl;
+		//角度范围0-2×pi，弧度制
+		if(th < -M_PI)
+		{
+			th += 2*M_PI;
+		}
+		else if(th > M_PI)
+		{
+			th -= 2*M_PI;
+		}
+std::cout << "x: " << x << "y: " << y <<"th " << th * arc2deg << std::endl;
 std::cout << "vx: " << vx << "vy: " << vy << std::endl;
 		geometry_msgs::Quaternion odom_quat;	
 		odom_quat = tf::createQuaternionMsgFromRollPitchYaw(0,0,th);
@@ -160,8 +155,6 @@ std::cout << "vx: " << vx << "vy: " << vy << std::endl;
 		odom_pub.publish(odom);
 
 		loop_rate.sleep();
-
-		
 	}
 	return 0;
 

@@ -3,10 +3,13 @@
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include <geometry_msgs/PointStamped.h>		
 #include <tf/transform_broadcaster.h>
-#include <tf/transform_listener.h>			
+#include <tf/transform_listener.h>	
+#include <cmath>		
 
 ros::Publisher reviseOdometryPublisher;
 ros::Publisher robotPosePublisher;
+
+const double arc2deg = 180/M_PI;
 
 float odomX;
 float odomY;
@@ -49,6 +52,7 @@ void handleOdom(const nav_msgs::Odometry::ConstPtr& msg)
 	odomVx = msg->twist.twist.linear.x;
 	odomVy = msg->twist.twist.linear.y;
 	odomVth = msg->twist.twist.angular.z;
+//printf("odomTh:%f\n",odomTh * arc2deg);
 }
 
 //amcl数据直接发布
