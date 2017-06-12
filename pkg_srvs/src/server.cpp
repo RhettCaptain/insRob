@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "pkg_srvs/SrvMode.h"
 #include "pkg_srvs/SrvGetLine.h"
+#include "pkg_srvs/SrvGetLineTheta.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <string>
@@ -128,6 +129,33 @@ bool getLine(pkg_srvs::SrvGetLine::Request &req,pkg_srvs::SrvGetLine::Response &
   	return true;
 }
 
+bool getLineTheta(pkg_srvs::SrvGetLineTheta::Request &req, pkg_srvs::SrvGetLineTheta::Response &res)
+{
+	double x1,y1,x2,y2;
+	x1=req.poseA.pose.position.x;
+	y1=req.poseA.pose.position.y;	
+	x2=req.poseB.pose.position.x;
+	y2=req.poseB.pose.position.y;
+        double x, y,x0,y0;
+	x = x2 - x1;
+	y = y2 - y1;
+	x0 = 1; y0 = 0;
+	double ab, aa, bb, cosr, ltheta, linetheta;
+	ab = x * x0 + y * y0;
+	aa = sqrt(x * x + y * y);
+	bb = sqrt(x0 * x0 + y0  * y0);
+	cosr = ab / aa / bb;
+	ltheta = acos(cosr);
+	if (y>0)
+		linetheta = 2 * M_PI - ltheta;
+	else
+		linetheta = ltheta;
+		
+	res.theta=linetheta;
+	return true;
+	
+}
+
 bool pointLine(pkg_srvs::SrvPointLine::Request &req, pkg_srvs::SrvPointLine::Response &res)
 {
 	double x,y,a,b,c;
@@ -205,6 +233,7 @@ int main(int argc, char** argv)
 	ros::NodeHandle nodeHandle;
 	ros::ServiceServer modeService = nodeHandle.advertiseService("srv_mode",changeMode);
 	ros::ServiceServer getLineService = nodeHandle.advertiseService("srv_get_line",getLine);
+	ros::ServiceServer getLineThetaService = nodeHandle.advertiseService("srv_get_line_theta",getLineTheta);
 	ros::ServiceServer pointLineService = nodeHandle.advertiseService("srv_point_line",pointLine);
 	ros::ServiceServer getYawBiasService = nodeHandle.advertiseService("srv_get_yaw_bias",getYawBias);
 	ros::ServiceServer getDistanceService = nodeHandle.advertiseService("srv_get_distance",getDistance);

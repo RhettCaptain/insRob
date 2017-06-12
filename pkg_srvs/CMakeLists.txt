@@ -60,6 +60,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    SrvMode.srv
    SrvGetLine.srv
+   SrvGetLineTheta.srv
    SrvPointLine.srv
    SrvGetYawBias.srv
    SrvGetDistance.srv

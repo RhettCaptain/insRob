@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "pkg_srvs/SrvMode.h"
 #include "pkg_srvs/SrvGetLine.h"
+#include "pkg_srvs/SrvGetLineTheta.h"
 #include "pkg_srvs/SrvPointLine.h"
 #include "pkg_srvs/SrvGetDistance.h"
 #include "pkg_srvs/SrvGetYawBias.h"
@@ -38,6 +39,23 @@ int main(int argc, char** argv)
 		ROS_INFO("getLineService lines[3]:{%f,%f,%f}",getLineService.response.line[0],getLineService.response.line[1],getLineService.response.line[2]);
 	}
 	*/
+
+	//test getYawBias
+	
+        ros::ServiceClient testGetLineThetaClient = nodeHandle.serviceClient<pkg_srvs::SrvGetLineTheta>("srv_get_line_theta");
+	pkg_srvs::SrvGetLineTheta getLineThetaService;
+	geometry_msgs::PoseWithCovariance poseA,poseB;
+	poseA.pose.position.x = 1;
+	poseA.pose.position.y = 3;
+	poseB.pose.position.x = 3;
+	poseB.pose.position.y = -1;
+	getLineThetaService.request.poseA = poseA;
+	getLineThetaService.request.poseB = poseB;
+	if(testGetLineThetaClient.call(getLineThetaService))
+	{
+		ROS_INFO("getLineThetaService theta:%f",getLineThetaService.response.theta);
+	}
+
 	//test pointline
 	/*
 	ros::ServiceClient testPointLineClient = nodeHandle.serviceClient<pkg_srvs::SrvPointLine>("srv_point_line");
@@ -55,8 +73,9 @@ int main(int argc, char** argv)
 		ROS_INFO("pointLineService distance:%f",pointLineService.response.distance);
 	}
 	*/
+
 	//test getYawBias
-	
+	/*
         ros::ServiceClient testGetYawBiasClient = nodeHandle.serviceClient<pkg_srvs::SrvGetYawBias>("srv_get_yaw_bias");
 	pkg_srvs::SrvGetYawBias getYawBiasService;
 	geometry_msgs::PoseWithCovariance poseA,poseB,poseC;
@@ -72,7 +91,8 @@ int main(int argc, char** argv)
 	{
 		ROS_INFO("getYawBiasService theta:%f",getYawBiasService.response.theta);
 	}
-	
+	*/
+
 	//test getDistance
 	/*
         ros::ServiceClient testGetDistanceClient = nodeHandle.serviceClient<pkg_srvs::SrvGetDistance>("srv_get_distance");
