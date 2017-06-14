@@ -107,7 +107,7 @@ int main(int argc, char** argv)
 		x += delta_x;
 		y += delta_y;
 		th += delta_th;
-		//角度范围0-2×pi，弧度制
+		//角度范围-pi - pi，弧度制
 		if(th < -M_PI)
 		{
 			th += 2*M_PI;

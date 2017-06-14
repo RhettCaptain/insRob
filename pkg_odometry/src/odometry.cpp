@@ -20,8 +20,6 @@ double vx;
 double vy;
 double vth;
 
-ros::Time curTime;
-ros::Time lastTime;
 
 const double wheelDis = 0.36;
 void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
@@ -36,7 +34,6 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 		double vl = (vlf+vlb)/2;
 		double vr = (vrf+vrb)/2;
 		double v = (vl+vr)/2;
-	//	double dt = (curTime - lastTime).toSec();
 		vx = cos(th) * v;
 		vy = sin(th) * v;
 std::cout<<"vl: " << vl << "vr: " <<vr<<std::endl;
@@ -47,13 +44,7 @@ std::cout<<"vl: " << vl << "vr: " <<vr<<std::endl;
 	}
 	else if(msg->type == "COMPASS")
 	{
-		double dt = (curTime - lastTime).toSec();	//可能有问题
-		//vx remain
-		//vy remain
-		vth = (msg->th - th)/dt;
-		x += vx * dt;
-		y += vy * dt;
-		th = msg->th; 
+		//TO DO
 	}
 	else if(msg->type == "IMU")
 	{
@@ -80,12 +71,11 @@ int main(int argc, char** argv)
 	vy = 0.0;
 	vth = 0.0;
 
-
-	curTime = ros::Time::now();
-	lastTime = ros::Time::now();
+	ros::Time curTime = ros::Time::now();
+	ros::Time lastTime = ros::Time::now();
 
 	tf::TransformBroadcaster broadcaster;
-	ros::Rate loop_rate(20);
+	ros::Rate loop_rate(100);
 
 	const double arc2deg = 180/M_PI;
 
@@ -95,15 +85,13 @@ int main(int argc, char** argv)
 	odom_trans.child_frame_id = "base_link";
 
 	while (ros::ok()) {
-		curTime = ros::Time::now(); 
-        	ros::spinOnce();
+		//周期性航迹推算
+		curTime = ros::Time::now(); 	//周期开始，更新当前时间
+        	ros::spinOnce();		//检查跟新外部数据
 		double dt = (curTime - lastTime).toSec();
 		double delta_x = vx * dt;
 		double delta_y = vy * dt;
-	//	double delta_x = (vx * cos(th) - vy * sin(th)) * dt;
-	//	double delta_y = (vx * sin(th) + vy * cos(th)) * dt;
 		double delta_th = vth * dt;
-		lastTime = curTime;
 		x += delta_x;
 		y += delta_y;
 		th += delta_th;
@@ -116,31 +104,30 @@ int main(int argc, char** argv)
 		{
 			th -= 2*M_PI;
 		}
+		
+		lastTime = curTime;		//航迹推算处理结束，当前时间作为上一周期时间。
+//虽然一次循环没有结束，但位姿的新周期已经开始了。
 std::cout << "x: " << x << "y: " << y <<"th " << th * arc2deg << std::endl;
 std::cout << "vx: " << vx << "vy: " << vy << std::endl;
-		geometry_msgs::Quaternion odom_quat;	
-		odom_quat = tf::createQuaternionMsgFromRollPitchYaw(0,0,th);
 
-		// update transform
+		//更新base_link->odom坐标变换
 		odom_trans.header.stamp = curTime; 
 		odom_trans.transform.translation.x = x;  
 		odom_trans.transform.translation.y = y;  
 		odom_trans.transform.translation.z = 0.0;
 		odom_trans.transform.rotation = tf::createQuaternionMsgFromYaw(th);
 
-		//filling the odometry
+		//更新odom消息
 		nav_msgs::Odometry odom;
 		odom.header.stamp = curTime;
 		odom.header.frame_id = "odom";
 		odom.child_frame_id = "base_link";
-
-		// position
+		//位姿
 		odom.pose.pose.position.x = x;
 		odom.pose.pose.position.y = y;
 		odom.pose.pose.position.z = 0.0;
-		odom.pose.pose.orientation = odom_quat;
-
-		//velocity
+		odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(th);
+		//速度
 		odom.twist.twist.linear.x = vx;
 		odom.twist.twist.linear.y = vy;
 		odom.twist.twist.linear.z = 0.0;
@@ -148,9 +135,7 @@ std::cout << "vx: " << vx << "vy: " << vy << std::endl;
 		odom.twist.twist.angular.y = 0.0;
 		odom.twist.twist.angular.z = vth;
 
-		lastTime = curTime;
-
-		// publishing the odometry and the new tf
+		//发布odom消息和baselink->odom坐标变换
 		broadcaster.sendTransform(odom_trans);
 		odom_pub.publish(odom);
 
