@@ -147,7 +147,7 @@ bool getLineTheta(pkg_srvs::SrvGetLineTheta::Request &req, pkg_srvs::SrvGetLineT
 	cosr = ab / aa / bb;
 	ltheta = acos(cosr);
 	if (y>0)
-		linetheta = 2 * M_PI - ltheta;
+		linetheta = - ltheta;
 	else
 		linetheta = ltheta;
 		
@@ -194,24 +194,6 @@ bool getYawBias(pkg_srvs::SrvGetYawBias::Request  &req, pkg_srvs::SrvGetYawBias:
 		
 	res.theta= bias - linetheta;
 	return true;
-/*
-	double a,b,c,thetaline,bias;
-	a=req.line[0];
-	b=req.line[1];
-	c=req.line[2];
-  	bias=tf::getYaw(req.pose.pose.orientation);
-	double k;
-    	if (b != 0)
-   	{
-		k = -a / b;
-		thetaline = atan(k);
-  	}
- 	else
-   	{
-		thetaline = M_PI / 2;
-    	}
-    	res.theta=bias - thetaline;
-  	return true;*/
 }
 
 bool getDistance(pkg_srvs::SrvGetDistance::Request  &req, pkg_srvs::SrvGetDistance::Response &res)
