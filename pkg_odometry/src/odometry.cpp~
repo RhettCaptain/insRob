@@ -29,6 +29,14 @@ const double axisDis = 0.55;
 const double wheelDis = 0.535;
 const double opAngDis = sqrt(axisDis*axisDis + wheelDis*wheelDis);
 const double spinFactor = wheelDis/opAngDis/opAngDis;
+
+void reviseOdom(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
+{
+	x = msg->pose.pose.position.x;
+	y = msg->pose.pose.position.y;
+	th = tf::getYaw(msg->pose.pose.orientation);
+}
+
 void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 {
 	//读取、判断、更新最新数据
@@ -46,17 +54,8 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 		double v = (vl+vr)/2;
 		vx = cos(th) * v;
 		vy = sin(th) * v;
-		if(vl*vr<0)	//原地旋转
-		{
-			vth = (vr-vl)*spinFactor;
-		}
-		else
-		{
-			vth = (vr-vl)/wheelDis;
-		}
 		vth = (vr-vl)*spinFactor;
-	
-
+		
 		double dlf = msg->dlf;
 		double dlb = msg->dlb;
 	//double dlb = msg->dlf;
@@ -69,14 +68,8 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 		
 		x += cos(th) * d;
 		y += sin(th) * d;
-		if(dl*dr<0)	//原地旋转
-		{
-			th += (dr-dl)*spinFactor;
-		}
-		else
-		{
-			th += (dr-dl)/wheelDis;
-		}
+		th += (dr-dl)*spinFactor;
+		
 		
 				
 		lastOdomTime = ros::Time::now();
@@ -96,10 +89,10 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 int main(int argc, char** argv) 
 {
     	ros::init(argc, argv, "state_publisher");
-	ros::NodeHandle n;
-	ros::NodeHandle n2;
-	ros::Subscriber odometrySensorSubscriber = n2.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
-	ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 10);
+	ros::NodeHandle nodeHandle;
+	ros::Subscriber odometryReviseSubscriber = nodeHandle.subscribe("topic_revise_odometry",1000,revise);	//订阅修正信息
+	ros::Subscriber odometrySensorSubscriber = nodeHandle.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
+	ros::Publisher odom_pub = nodeHandle.advertise<nav_msgs::Odometry>("odom", 10);
 
 	// initial position
 	x = 0.0; 
@@ -130,13 +123,6 @@ int main(int argc, char** argv)
 		//周期性航迹推算
 	//	curTime = ros::Time::now(); 	//周期开始，更新当前时间
         	ros::spinOnce();		//检查跟新外部数据
-	//	double dt = (curTime - lastTime).toSec();
-	//	double delta_x = vx * dt;
-	//	double delta_y = vy * dt;
-	//	double delta_th = vth * dt;
-	//	x += delta_x;
-	//	y += delta_y;
-	//	th += delta_th;
 		//角度范围-pi - pi，弧度制
 		while(th < -M_PI)
 		{

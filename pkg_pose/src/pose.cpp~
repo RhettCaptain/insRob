@@ -4,6 +4,7 @@
 #include <geometry_msgs/PointStamped.h>		
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>	
+#include "pkg_msgs/MsgServerCmd.h"
 #include <cmath>		
 
 ros::Publisher reviseOdometryPublisher;
@@ -17,6 +18,12 @@ float odomTh;
 float odomVx;
 float odomVy;
 float odomVth;
+
+float robotX;
+float robotY;
+float robotTh;
+
+bool laserOn = false;
 
 //odom-map转换监听，并发布odom的地图坐标
 void transOdom(const tf::TransformListener& listener)
@@ -37,9 +44,14 @@ void transOdom(const tf::TransformListener& listener)
 		robotPose.header.frame_id = "map";
 		robotPose.pose.pose = mapPose.pose;
 		robotPosePublisher.publish(robotPose);
+		//更新robot pose
+		robotX = mapPose.pose.position.x;
+		robotY = mapPose.pose.position.y;
+		robotTh = tf::getYaw(mapPose.pose.orientation);
 	}
 	catch(tf::TransformException& ex){
 	}
+	
 	
 }
 
@@ -52,25 +64,54 @@ void handleOdom(const nav_msgs::Odometry::ConstPtr& msg)
 	odomVx = msg->twist.twist.linear.x;
 	odomVy = msg->twist.twist.linear.y;
 	odomVth = msg->twist.twist.angular.z;
-//printf("odomTh:%f\n",odomTh * arc2deg);
+
+	if(!laserOn)
+	{
+		geometry_msgs::PoseWithCovarianceStamped robotPose;
+		robotPose.header.stamp = ros::Time();
+		robotPose.header.frame_id = "odom";
+		robotPose.pose.pose.position.x = odomX;
+		robotPose.pose.pose.position.y = odomY;
+		robotPose.pose.pose.position.z = 0;
+		robotPose.pose.pose.orientation = tf::createQuaternionMsgFromYaw(odomTh);
+		robotPosePublisher.publish(robotPose);
+	}
+
+
 }
 
 //amcl数据直接发布
 void handleAmcl(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
 	robotPosePublisher.publish(*msg);
-	/*
-	float x = msg->pose.pose.position.x;
-	float y = msg->pose.pose.position.y;
-	float th = tf::getYaw(msg->pose.pose.orientation);
-	//更新
-	//不要更新
+
+	//更新robot pose
+	robotX = msg->pose.pose.position.x;
+	robotY = msg->pose.pose.position.y;
+	robotTh = tf::getYaw(msg->pose.pose.orientation);
+}
+
+//监听激光开关
+void listenLaser(const pkg_msgs::MsgServerCmd::ConstPtr& msg)
+{
 	
-	geometry_msgs::PoseWithCovarianceStamped reviseMsg;
-	reviseMsg.pose.pose.position.x = x;
-	reviseMsg.pose.pose.position.y = y;
-	reviseMsg.pose.pose.orientation.z = th;
-	reviseOdometryPublisher.publish(reviseMsg);*/
+	if(msg->cmd == "LASER_ON")
+	{
+		laserOn = true;
+	}
+	else if(msg->cmd == "LASER_OFF")
+	{
+		laserOn = false;
+		//更新odom坐标
+		geometry_msgs::PoseWithCovarianceStamped robotPose;
+		robotPose.header.stamp = ros::Time();
+		robotPose.header.frame_id = "odom";
+		robotPose.pose.pose.position.x = robotX;
+		robotPose.pose.pose.position.y = robotY;
+		robotPose.pose.pose.position.z = 0;
+		robotPose.pose.pose.orientation = tf::createQuaternionMsgFromYaw(robotTh);
+		reviseOdometryPublisher.publish(robotPose);
+	}
 }
 
 int main(int argc, char** argv)
@@ -79,9 +120,10 @@ int main(int argc, char** argv)
 	ros::NodeHandle nodeHandle;
 	ros::Subscriber odomSubscriber = nodeHandle.subscribe("odom",1000,handleOdom);		//订阅量测法数据
 	ros::Subscriber amclSubscriber = nodeHandle.subscribe("amcl_pose",1000,handleAmcl);	//订阅激光定位数据
-	robotPosePublisher = nodeHandle.advertise<geometry_msgs::PoseWithCovarianceStamped>("topic_robot_pose",1000);	//发布量测修正信息
-	tf::TransformListener listener(ros::Duration(10));
-	ros::Timer timer = nodeHandle.createTimer(ros::Duration(1.0),boost::bind(&transOdom, boost::ref(listener)));
-//	reviseOdometryPublisher = nodeHandle.advertise<geometry_msgs::PoseWithCovarianceStamped>("topic_revise_odometry",1000);	//发布量测修正信息	
+	ros::Subscriber serverCmdSubscriber = nodeHandle.subscribe("topic_server_cmd",1000,listenLaser);	//订阅服务器指令,监听激光开关
+	robotPosePublisher = nodeHandle.advertise<geometry_msgs::PoseWithCovarianceStamped>("topic_robot_pose",1000);	//发布机器人位姿
+	tf::TransformListener listener(ros::Duration(20));
+	ros::Timer timer = nodeHandle.createTimer(ros::Duration(0.05),boost::bind(&transOdom, boost::ref(listener)));
+	reviseOdometryPublisher = nodeHandle.advertise<geometry_msgs::PoseWithCovarianceStamped>("topic_revise_odometry",1000);	//发布量测修正信息	
 	ros::spin();
 }

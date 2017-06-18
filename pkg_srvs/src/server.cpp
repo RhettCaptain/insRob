@@ -95,6 +95,8 @@ bool changeMode(pkg_srvs::SrvMode::Request &req,pkg_srvs::SrvMode::Response &res
 	else if(cmd == "LASER_OFF")
 	{
 		int child;
+		cmdMsg.cmd = "LASER_OFF";
+		cmdPublisher.publish(cmdMsg);
 		child = system("sh ~/.nav/kill_process.sh amcl");
 		if(child<0)
 		{
@@ -123,10 +125,26 @@ bool getLine(pkg_srvs::SrvGetLine::Request &req,pkg_srvs::SrvGetLine::Response &
 	y1=req.poseA.pose.position.y;	
 	x2=req.poseB.pose.position.x;
 	y2=req.poseB.pose.position.y;
+	double x, y,x0,y0;
+	x = x2 - x1;
+	y = y2 - y1;
+	x0 = 1; y0 = 0;
+	double ab, aa, bb, cosr, ltheta, linetheta;
+	ab = x * x0 + y * y0;
+	aa = sqrt(x * x + y * y);
+	bb = sqrt(x0 * x0 + y0  * y0);
+	cosr = ab / aa / bb;   //余弦
+	ltheta = acos(cosr);
+	if (y<0)
+		linetheta = - ltheta;
+	else
+		linetheta = ltheta;
+		
 	res.line[0]=y2-y1;
-  	res.line[1]=x1-x2;
+        res.line[1]=x1-x2;
 	res.line[2]=x2*y1-x1*y2;
-  	return true;
+	res.line[3]=linetheta;
+        return true;
 }
 
 bool getLineTheta(pkg_srvs::SrvGetLineTheta::Request &req, pkg_srvs::SrvGetLineTheta::Response &res)
@@ -177,7 +195,11 @@ bool getYawBias(pkg_srvs::SrvGetYawBias::Request  &req, pkg_srvs::SrvGetYawBias:
 	x2=req.poseB.pose.position.x;
 	y2=req.poseB.pose.position.y;
         bias=tf::getYaw(req.poseC.pose.orientation);
-        double x, y,x0,y0;
+        if(bias<0)
+  	{
+  	    bias=2 * M_PI+bias;
+  	}
+        double x, y,x0,y0;   
 	x = x2 - x1;
 	y = y2 - y1;
 	x0 = 1; y0 = 0;
@@ -191,8 +213,16 @@ bool getYawBias(pkg_srvs::SrvGetYawBias::Request  &req, pkg_srvs::SrvGetYawBias:
 		linetheta = 2 * M_PI - ltheta;
 	else
 		linetheta = ltheta;
-		
-	res.theta= bias - linetheta;
+	double yaw;
+	yaw= bias - linetheta; 
+	double th;
+	if (yaw > M_PI)
+		th = yaw -2* M_PI;
+	else if (yaw < -M_PI)
+		th = 2 * M_PI + yaw;
+	else
+		th = yaw;
+	res.theta= -th;
 	return true;
 }
 

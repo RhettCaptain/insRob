@@ -1,4 +1,4 @@
 geometry_msgs/PoseWithCovariance poseA
 geometry_msgs/PoseWithCovariance poseB
 ---
-float32 line[3]
+float32[3] line
