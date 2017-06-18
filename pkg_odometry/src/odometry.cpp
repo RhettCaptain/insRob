@@ -9,24 +9,34 @@
 #include <math.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <iostream>
+#include <stdio.h>
 
 // position
 double x; 
 double y;
 double th;
 
+
 // velocity
 double vx;
 double vy;
 double vth;
 
+ros::Time lastOdomTime;
+ros::Time curOdomTime;
 
-const double wheelDis = 0.36;
+const double axisDis = 0.55;
+const double wheelDis = 0.535;
+const double opAngDis = sqrt(axisDis*axisDis + wheelDis*wheelDis);
+const double spinFactor = wheelDis/opAngDis/opAngDis;
 void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 {
 	//读取、判断、更新最新数据
 	if(msg->type == "ODOMETER")
 	{	
+		curOdomTime = ros::Time::now();
+		double dt = (curOdomTime - lastOdomTime).toSec();
+		
 		double vlf = msg->vlf;
 		double vlb = msg->vlb;
 		double vrf = msg->vrf;
@@ -36,11 +46,26 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 		double v = (vl+vr)/2;
 		vx = cos(th) * v;
 		vy = sin(th) * v;
-std::cout<<"vl: " << vl << "vr: " <<vr<<std::endl;
-		vth = (vr-vl)/wheelDis;
-	//	x += vx * dt;
-	//	y += vy * dt;
-		//th remain 
+		vth = (vr-vl)*spinFactor;
+		
+		double dlf = msg->dlf;
+		double dlb = msg->dlb;
+	//double dlb = msg->dlf;
+		double drf = msg->drf;
+		double drb = msg->drb;
+	//double drb = msg->drf;
+		double dl = (dlf+dlb)/2;
+		double dr = (drf+drb)/2;
+		double d = (dl+dr)/2;
+		
+		x += cos(th) * d;
+		y += sin(th) * d;
+		th += (dr-dl)*spinFactor;
+		
+		
+				
+		lastOdomTime = ros::Time::now();
+		
 	}
 	else if(msg->type == "COMPASS")
 	{
@@ -65,14 +90,16 @@ int main(int argc, char** argv)
 	x = 0.0; 
 	y = 0.0;
 	th = 0;
-
+	
 	// velocity
 	vx = 0.0;
 	vy = 0.0;
 	vth = 0.0;
-
-	ros::Time curTime = ros::Time::now();
-	ros::Time lastTime = ros::Time::now();
+	
+	curOdomTime = ros::Time::now();
+	lastOdomTime = ros::Time::now();
+//	ros::Time curTime = ros::Time::now();
+//	ros::Time lastTime = ros::Time::now();
 
 	tf::TransformBroadcaster broadcaster;
 	ros::Rate loop_rate(100);
@@ -86,32 +113,32 @@ int main(int argc, char** argv)
 
 	while (ros::ok()) {
 		//周期性航迹推算
-		curTime = ros::Time::now(); 	//周期开始，更新当前时间
+	//	curTime = ros::Time::now(); 	//周期开始，更新当前时间
         	ros::spinOnce();		//检查跟新外部数据
-		double dt = (curTime - lastTime).toSec();
-		double delta_x = vx * dt;
-		double delta_y = vy * dt;
-		double delta_th = vth * dt;
-		x += delta_x;
-		y += delta_y;
-		th += delta_th;
+	//	double dt = (curTime - lastTime).toSec();
+	//	double delta_x = vx * dt;
+	//	double delta_y = vy * dt;
+	//	double delta_th = vth * dt;
+	//	x += delta_x;
+	//	y += delta_y;
+	//	th += delta_th;
 		//角度范围-pi - pi，弧度制
-		if(th < -M_PI)
+		while(th < -M_PI)
 		{
 			th += 2*M_PI;
 		}
-		else if(th > M_PI)
+		while(th > M_PI)
 		{
 			th -= 2*M_PI;
 		}
 		
-		lastTime = curTime;		//航迹推算处理结束，当前时间作为上一周期时间。
+	//	lastTime = curTime;		//航迹推算处理结束，当前时间作为上一周期时间。
 //虽然一次循环没有结束，但位姿的新周期已经开始了。
-std::cout << "x: " << x << "y: " << y <<"th " << th * arc2deg << std::endl;
-std::cout << "vx: " << vx << "vy: " << vy << std::endl;
+std::cout << "x: " << x << ", y: " << y <<", th " << th * arc2deg << std::endl;
+std::cout << "vx: " << vx << ", vy: " << vy << std::endl;
 
 		//更新base_link->odom坐标变换
-		odom_trans.header.stamp = curTime; 
+		odom_trans.header.stamp = ros::Time::now(); 
 		odom_trans.transform.translation.x = x;  
 		odom_trans.transform.translation.y = y;  
 		odom_trans.transform.translation.z = 0.0;
@@ -119,7 +146,7 @@ std::cout << "vx: " << vx << "vy: " << vy << std::endl;
 
 		//更新odom消息
 		nav_msgs::Odometry odom;
-		odom.header.stamp = curTime;
+		odom.header.stamp = ros::Time::now();
 		odom.header.frame_id = "odom";
 		odom.child_frame_id = "base_link";
 		//位姿

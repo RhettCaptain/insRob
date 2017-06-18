@@ -65,7 +65,7 @@ void handleAmcl(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	float th = tf::getYaw(msg->pose.pose.orientation);
 	//更新
 	//不要更新
-	
+	/*
 	geometry_msgs::PoseWithCovarianceStamped reviseMsg;
 	reviseMsg.pose.pose.position.x = x;
 	reviseMsg.pose.pose.position.y = y;

@@ -14,7 +14,7 @@ void handleOdom(const nav_msgs::Odometry::ConstPtr& msg)
 	float vx = msg->twist.twist.linear.x;
 	float vy = msg->twist.twist.linear.y;
 	float vth = msg->twist.twist.angular.z;
-	printf("get odom data:x%f,y%f,th%f\n",x,y,th*arc2deg);
+	ROS_INFO("get odom data:x%f,y%f,th%f\n",x,y,th*arc2deg);
 }
 
 //amcl数据处理函数
@@ -23,7 +23,7 @@ void handleAmcl(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	float x = msg->pose.pose.position.x;
 	float y = msg->pose.pose.position.y;
 	float th = tf::getYaw(msg->pose.pose.orientation);
-	printf("get amcl data:x%f,y%f,th%f\n",x,y,th*arc2deg);
+	ROS_INFO("get amcl data:x%f,y%f,th%f\n",x,y,th*arc2deg);
 }
 
 //正常输出robot_pose
@@ -32,7 +32,7 @@ void handlePose(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	float x = msg->pose.pose.position.x;
 	float y = msg->pose.pose.position.y;
 	float th = tf::getYaw(msg->pose.pose.orientation);
-	printf("get robot pose data:x%f,y%f,th%f\n",x,y,th*arc2deg);
+	ROS_INFO("get robot pose data:x%f,y%f,th%f\n",x,y,th*arc2deg);
 }
 
 int main(int argc, char** argv)

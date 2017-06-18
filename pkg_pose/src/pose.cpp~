@@ -52,7 +52,7 @@ void handleOdom(const nav_msgs::Odometry::ConstPtr& msg)
 	odomVx = msg->twist.twist.linear.x;
 	odomVy = msg->twist.twist.linear.y;
 	odomVth = msg->twist.twist.angular.z;
-printf("odomTh:%f\n",odomTh * arc2deg);
+//printf("odomTh:%f\n",odomTh * arc2deg);
 }
 
 //amcl数据直接发布
