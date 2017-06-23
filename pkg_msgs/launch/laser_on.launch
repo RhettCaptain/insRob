@@ -1,5 +1,5 @@
 <launch>
-	<node pkg="map_server" name="map_server" type="map_server" args="/home/user/robot/kjy.yaml"/>
+	<node pkg="map_server" name="map_server" type="map_server" args="/home/user/hector002.yaml"/>
 	<node pkg="laser_node" name="laser_node" type="laser_node"/>
 	<node pkg="amcl" name="amcl" type="amcl"/>
 </launch>

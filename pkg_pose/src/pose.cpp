@@ -124,6 +124,7 @@ int main(int argc, char** argv)
 	robotPosePublisher = nodeHandle.advertise<geometry_msgs::PoseWithCovarianceStamped>("topic_robot_pose",1000);	//发布机器人位姿
 	tf::TransformListener listener(ros::Duration(0.05));
 	ros::Timer timer = nodeHandle.createTimer(ros::Duration(0.05),boost::bind(&transOdom, boost::ref(listener)));
-	reviseOdometryPublisher = nodeHandle.advertise<geometry_msgs::PoseWithCovarianceStamped>("topic_revise_odometry",1000);	//发布量测修正信息	
-	ros::spin();
+	reviseOdometryPublisher = nodeHandle.advertise<geometry_msgs::PoseWithCovarianceStamped>("topic_revise_odometry",1000);	//发布量测修正信息
+	ros::MultiThreadedSpinner spinner(6);	
+	spinner.spin();
 }

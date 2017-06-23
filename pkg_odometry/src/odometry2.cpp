@@ -111,7 +111,7 @@ int main(int argc, char** argv)
 //	ros::Time lastTime = ros::Time::now();
 
 	tf::TransformBroadcaster broadcaster;
-	ros::Rate loop_rate(100);
+	ros::Rate loop_rate(50);
 
 	const double arc2deg = 180/M_PI;
 

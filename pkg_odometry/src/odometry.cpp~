@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 {
     	ros::init(argc, argv, "state_publisher");
 	ros::NodeHandle nodeHandle;
-	ros::Subscriber odometryReviseSubscriber = nodeHandle.subscribe("topic_revise_odometry",1000,revise);	//订阅修正信息
+	ros::Subscriber odometryReviseSubscriber = nodeHandle.subscribe("topic_revise_odometry",1000,reviseOdom);	//订阅修正信息
 	ros::Subscriber odometrySensorSubscriber = nodeHandle.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
 	ros::Publisher odom_pub = nodeHandle.advertise<nav_msgs::Odometry>("odom", 10);
 
