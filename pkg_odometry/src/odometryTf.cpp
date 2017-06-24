@@ -30,13 +30,12 @@ const double wheelDis = 0.535;
 const double opAngDis = sqrt(axisDis*axisDis + wheelDis*wheelDis);
 const double spinFactor = wheelDis/opAngDis/opAngDis;
 
-void revise(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
+void reviseOdom(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
 	x = msg->pose.pose.position.x;
 	y = msg->pose.pose.position.y;
 	th = tf::getYaw(msg->pose.pose.orientation);
 }
-
 
 void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 {
@@ -90,10 +89,10 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 int main(int argc, char** argv) 
 {
     	ros::init(argc, argv, "state_publisher");
-	ros::NodeHandle n;
-	ros::Subscriber odometryReviseSubscriber = n.subscribe("topic_revise_odometry",1000,revise);	//订阅修正信息
-	ros::Subscriber odometrySensorSubscriber = n.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
-	ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 10);
+	ros::NodeHandle nodeHandle;
+	ros::Subscriber odometryReviseSubscriber = nodeHandle.subscribe("topic_revise_odometry",1000,reviseOdom);	//订阅修正信息
+	ros::Subscriber odometrySensorSubscriber = nodeHandle.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
+	ros::Publisher odom_pub = nodeHandle.advertise<nav_msgs::Odometry>("odom", 10);
 
 	// initial position
 	x = 0.0; 
