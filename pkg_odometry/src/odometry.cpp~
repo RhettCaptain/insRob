@@ -24,6 +24,7 @@ double vth;
 
 ros::Time lastOdomTime;
 ros::Time curOdomTime;
+ros::Time reviseTime;
 
 const double axisDis = 0.55;
 const double wheelDis = 0.535;
@@ -35,6 +36,7 @@ void revise(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	x = msg->pose.pose.position.x;
 	y = msg->pose.pose.position.y;
 	th = tf::getYaw(msg->pose.pose.orientation);
+	reviseTime = msg->header.stamp;
 }
 
 

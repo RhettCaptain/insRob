@@ -24,6 +24,7 @@ double vth;
 
 ros::Time lastOdomTime;
 ros::Time curOdomTime;
+ros::Time reviseTime;
 
 const double axisDis = 0.55;
 const double wheelDis = 0.535;
@@ -35,6 +36,7 @@ void revise(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	x = msg->pose.pose.position.x;
 	y = msg->pose.pose.position.y;
 	th = tf::getYaw(msg->pose.pose.orientation);
+	reviseTime = msg->header.stamp;
 }
 
 
@@ -45,6 +47,7 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 	{	
 		curOdomTime = ros::Time::now();
 		double dt = (curOdomTime - lastOdomTime).toSec();
+		double timeOfRev =  (curOdomTime - reviseTime).toSec();
 		
 		double vlf = msg->vlf;
 		double vlb = msg->vlb;
@@ -67,11 +70,18 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 		double dr = (drf+drb)/2;
 		double d = (dl+dr)/2;
 		
-		x += cos(th) * d;
-		y += sin(th) * d;
-		th += (dr-dl)*spinFactor;
-		
-		
+		if(dt > timeOfRev)
+		{
+			x += cos(th) * d * timeOfRev /dt;
+			y += sin(th) * d * timeOfRev /dt;
+			th += (dr-dl)*spinFactor * timeOfRev /dt;
+		}
+		else
+		{
+			x += cos(th) * d;
+			y += sin(th) * d;
+			th += (dr-dl)*spinFactor;
+		}
 				
 		lastOdomTime = ros::Time::now();
 		

@@ -34,6 +34,7 @@ void handleAmcl(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	float y = msg->pose.pose.position.y;
 	float th = tf::getYaw(msg->pose.pose.orientation);
 	geometry_msgs::PoseWithCovarianceStamped reviseMsg;
+	reviseMsg.header.stamp = msg->header.stamp;
 	reviseMsg.pose.pose.position.x = x;
 	reviseMsg.pose.pose.position.y = y;
 	reviseMsg.pose.pose.position.z = 0;
