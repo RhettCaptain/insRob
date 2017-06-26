@@ -43,7 +43,7 @@ bool changeMode(pkg_srvs::SrvMode::Request &req,pkg_srvs::SrvMode::Response &res
 		{
 			return false;
 		}
-		child = system("sh ~/.nav/kill_process.sh LMS1xx_node");
+		child = system("sh ~/.nav/kill_process.sh laser_node");
 		if(child<0)
 		{
 			return false;
@@ -107,7 +107,7 @@ bool changeMode(pkg_srvs::SrvMode::Request &req,pkg_srvs::SrvMode::Response &res
 		{
 			return false;
 		}
-		child = system("sh ~/.nav/kill_process.sh LMS1xx_node");
+		child = system("sh ~/.nav/kill_process.sh laser_node");
 		if(child<0)
 		{
 			return false;
