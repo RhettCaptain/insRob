@@ -10,7 +10,7 @@
 #include "pkg_srvs/SrvGetLine.h"  //两点求直线服务
 #include "pkg_srvs/SrvGetYawBias.h" //求偏行角服务
 #include <string.h>
-#include "processor/stopflag.h"
+//#include "processor/stopflag.h"
 #include <iostream>
 
 using namespace std;
