@@ -1,0 +1,16 @@
+<launch>
+	<node pkg="communication" type="udp_node" name="udp_node" output="screen" >
+	</node>
+
+	<node pkg="communication" type="move_node" name="move_node"  >
+	</node>
+
+	<node pkg="processor" type="processor" name="processor" output="screen" launch-prefix="xterm -e">
+	</node>
+
+        <node pkg="stateandalarm" type="stateandalarm" name="stateandalarm"  >
+        </node>
+        
+        <include file= "$(find pkg_srvs)/launch/nav.launch"/>
+        
+</launch>

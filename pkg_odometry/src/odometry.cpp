@@ -24,21 +24,18 @@ double vth;
 
 ros::Time lastOdomTime;
 ros::Time curOdomTime;
-ros::Time reviseTime;
 
 const double axisDis = 0.55;
 const double wheelDis = 0.535;
 const double opAngDis = sqrt(axisDis*axisDis + wheelDis*wheelDis);
 const double spinFactor = wheelDis/opAngDis/opAngDis;
 
-void revise(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
+void reviseOdom(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
 	x = msg->pose.pose.position.x;
 	y = msg->pose.pose.position.y;
 	th = tf::getYaw(msg->pose.pose.orientation);
-	reviseTime = msg->header.stamp;
 }
-
 
 void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 {
@@ -47,7 +44,6 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 	{	
 		curOdomTime = ros::Time::now();
 		double dt = (curOdomTime - lastOdomTime).toSec();
-		double timeOfRev =  (curOdomTime - reviseTime).toSec();
 		
 		double vlf = msg->vlf;
 		double vlb = msg->vlb;
@@ -70,18 +66,11 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 		double dr = (drf+drb)/2;
 		double d = (dl+dr)/2;
 		
-		if(dt > timeOfRev)
-		{
-			x += cos(th) * d * timeOfRev /dt;
-			y += sin(th) * d * timeOfRev /dt;
-			th += (dr-dl)*spinFactor * timeOfRev /dt;
-		}
-		else
-		{
-			x += cos(th) * d;
-			y += sin(th) * d;
-			th += (dr-dl)*spinFactor;
-		}
+		x += cos(th) * d;
+		y += sin(th) * d;
+		th += (dr-dl)*spinFactor;
+		
+		
 				
 		lastOdomTime = ros::Time::now();
 		
@@ -100,10 +89,10 @@ void updateData(const pkg_msgs::MsgOdometrySensor::ConstPtr& msg)
 int main(int argc, char** argv) 
 {
     	ros::init(argc, argv, "state_publisher");
-	ros::NodeHandle n;
-	ros::Subscriber odometryReviseSubscriber = n.subscribe("topic_revise_odometry",1000,revise);	//订阅修正信息
-	ros::Subscriber odometrySensorSubscriber = n.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
-	ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 10);
+	ros::NodeHandle nodeHandle;
+	ros::Subscriber odometryReviseSubscriber = nodeHandle.subscribe("topic_revise_odometry",1000,reviseOdom);	//订阅修正信息
+	ros::Subscriber odometrySensorSubscriber = nodeHandle.subscribe("topic_odometry_sensor",1000,updateData);	//订阅量测传感器信息
+	ros::Publisher odom_pub = nodeHandle.advertise<nav_msgs::Odometry>("odom", 10);
 
 	// initial position
 	x = 0.0; 

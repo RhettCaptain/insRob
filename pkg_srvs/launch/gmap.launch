@@ -1,0 +1,9 @@
+<launch>	
+	<node pkg="laser_node" name="laser_node" type="laser_node"/>
+	<node pkg="pkg_odometry" name="node_odometry" type="node_odometry"/>
+	<node pkg="pkg_sensors_tf" name="node_sensors_tf" type="node_sensors_tf"/>
+	<node pkg="gmapping" name="slam_gmapping" type="slam_gmapping">
+	    <param name="delta" value="0.02"/>  <!--0.05-->
+	</node>
+	    
+</launch>

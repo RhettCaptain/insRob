@@ -1,0 +1,7 @@
+<launch>	
+	<node pkg="laser_node" name="laser_node" type="laser_node"/>
+	<node pkg="pkg_odometry" name="node_odometry" type="node_odometry"/>
+	<node pkg="pkg_sensors_tf" name="node_sensors_tf" type="node_sensors_tf"/>
+	<node pkg="hector_mapping" name="hector_mapping" type="hector_mapping"/>
+	<node pkg="pkg_pose" name="node_slam_pose" type="node_slam_pose"/>
+</launch>

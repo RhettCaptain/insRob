@@ -15,7 +15,10 @@ void handleSlam(const geometry_msgs::PoseStamped::ConstPtr& msg)
 	geometry_msgs::PoseWithCovarianceStamped robotPose;
 	robotPose.pose.pose.position.x = msg->pose.position.x;
 	robotPose.pose.pose.position.y = msg->pose.position.y;
+	robotPose.pose.pose.orientation.x = msg->pose.orientation.x;
+	robotPose.pose.pose.orientation.y = msg->pose.orientation.y;
 	robotPose.pose.pose.orientation.z = msg->pose.orientation.z;
+	robotPose.pose.pose.orientation.w = msg->pose.orientation.w;
 	robotPosePublisher.publish(robotPose);
 	/*
 	float x = msg->pose.pose.position.x;

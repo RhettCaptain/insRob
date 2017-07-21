@@ -1,0 +1,347 @@
+#include "ros/ros.h"
+#include "communication/state.h"
+#include "stateandalarm/state.h"
+#include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include "geometry_msgs/PoseWithCovariance.h"
+#include "nav_msgs/Odometry.h"
+#include "tf/transform_broadcaster.h"
+#include <sstream>
+#include <stdlib.h>
+#include <string>
+
+#define pi 3.1415926
+#define hightmp 20  //机器人本体高温线
+#define lowtmp  -5  //机器人本体低温线
+
+ unsigned char state[49]={0};//发送给上位机的状态
+ unsigned char comstate[3]={0};//通讯状态
+ unsigned char robotstate[3]={0};//机器人本体状态
+ int testi =0;//only for test
+   
+void statecallback1(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg1)  //获取机器人坐标以及姿态角度；
+{
+   
+   ROS_INFO("receive msg from nav\n");
+   double X,Y,th;
+   testi++;//only for test
+   X = msg1->pose.pose.position.x;
+   Y = msg1->pose.pose.position.y;
+   th = tf::getYaw(msg1->pose.pose.orientation);//实际使用
+   int Xcm=0;//位置数据待处理
+   int Ycm=0;
+ //  Xcm=X;
+ //  Ycm=Y;
+   Xcm=testi;//only for test
+   Ycm=testi;//only for test
+   int thdu=0;//姿态数据待处理
+ //  thdu=th*360/(2*pi);//确认是否弧度制，目前依弧度处理
+   thdu=testi;//only for test
+   state[0]=0x01;//接收正常
+   state[1]=0x51;//机器人坐标，cm
+   state[2]=Xcm>>24;
+   state[3]=Xcm>>16;
+   state[4]=Xcm>>8;
+   state[5]=Xcm;
+   state[6]=Ycm>>24;
+   state[7]=Ycm>>16;
+   state[8]=Ycm>>8;
+   state[9]=Ycm;
+   state[10]=0x52;//机器人位姿
+   state[11]=thdu>>8;
+   state[12]=thdu;
+ 
+}
+
+void statecallback2(const nav_msgs::Odometry::ConstPtr& msg2) //  //获取机器人速度信息
+{
+  
+  ROS_INFO("receive msg from odom!\n");
+  double V=0;
+  double Vx=msg2->twist.twist.linear.x;
+  double Vy=msg2->twist.twist.linear.y;
+  V=sqrt(Vx*Vx+Vy*Vy);//单位 m/s
+  int Vcms=0;
+ // Vcms=V*100;//单位 cm/s
+  Vcms=10;//only for test
+  state[13]=0x53;//机器人速度
+  state[14]=Vcms>>8;
+  state[15]=Vcms;
+ 
+}
+
+void statecallback3(const stateandalarm::state::ConstPtr& msg3)//获取PLC 板信息；
+{
+   
+  ROS_INFO("receive msg from PLC!\n");
+  char plc[50];
+  strcpy(plc,msg3->data.c_str());
+
+  comstate[0]=0x00;
+  if(msg3->break_flag){comstate[0]=0x02;}//与PLC通讯断开
+ 
+  state[19]=0x55;//机器人电量
+ // state[20]=plc[37]; 
+  state[20]=0x31;//only for test
+  state[21]=0x56; //机内温度
+//  state[22]=plc[20]; //电池温度
+//  state[23]=plc[21]; 
+//  state[24]=0x00; //工控机仓温度 to be solved!!!!!
+ // state[25]=0x00;
+  state[22]=0x00;//only for test
+  state[23]=0x27;//only for test
+  state[24]=0x00;//only for test
+  state[25]=0x14;//only for test
+ 
+  unsigned int bstate[6]={0};
+  int Bstate=0;
+  bstate[0]=(int)0x0000;
+  if(plc[6]=='1'){bstate[1]=(int)0x0080;}
+  if(plc[5]=='1'){bstate[2]=(int)0x0100;}
+  if(plc[4]=='1'){bstate[3]=(int)0x0200;}
+  if(plc[3]=='1'){bstate[4]=(int)0x0400;}
+  if(plc[2]=='1'){bstate[5]=(int)0x0080;}
+  Bstate=bstate[0]+bstate[1]+bstate[2]+bstate[3]+bstate[4]+bstate[5];
+  state[39]=Bstate>>8;//机器人电池错误状态
+  //state[40]=Bstate;
+  state[40]=0x16;
+  int robottmp=0;
+  int tmp1=0;
+  int tmp2=0;
+  int tmp3=0;
+  int tmp4=0;
+  tmp1=((tmp1 | plc[28])<<8)|plc[29];
+  tmp2=((tmp2 | plc[30])<<8)|plc[31];
+  tmp3=((tmp3 | plc[32])<<8)|plc[33];
+  tmp4=((tmp4 | plc[34])<<8)|plc[35];
+  robottmp=(tmp1+tmp2+tmp3+tmp4)/4;
+  robotstate[0]=0x00;
+  robotstate[1]=0x00;
+  if(robottmp>=hightmp) {robotstate[0]=0x20;}
+  if(robottmp<=lowtmp)  {robotstate[1]=0x40;}
+  state[37]=0x00;
+ // state[38]=robotstate[0] | robotstate[1]; 
+  state[38]=0x01;
+
+}  
+
+
+void statecallback4(const stateandalarm::state::ConstPtr& msg4)
+{
+//获取运动控制板信息；
+ 
+  ROS_INFO("receive msg from move!\n");
+  char mov[100];
+  strcpy(mov,msg4->data.c_str());
+  state[26]=0x57;//急停状态
+  //state[27]=mov[5];
+  state[27]=0x00;//only for test
+  state[28]=0x58;//超声波状态
+  state[29]=0x01;//to be solved!!!!!!!!!!!! 
+
+  state[34]=0x5B;//机器人状态
+  
+  comstate[1]=0x00;
+  if(msg4->break_flag) {comstate[1]=0x04;}//与运控断开
+  
+  unsigned int mdstate[65]={0};
+  unsigned int lumd=0;
+  unsigned int ldmd=0;
+  unsigned int wumd=0;
+  unsigned int wdmd=0;
+  int i=0;
+  int j=0;
+  int k=0;
+  int l=0;
+  mdstate[0]=0;
+  if(mov[50]==0x01){mdstate[1]=(int)0x0001;}// 左上电机
+  if(mov[50]==0x02){mdstate[2]=(int)0x0002;}
+  if(mov[50]==0x04){mdstate[3]=(int)0x0004;}
+  if(mov[50]==0x08){mdstate[4]=(int)0x0008;}
+  if(mov[50]==0x10){mdstate[5]=(int)0x0010;}
+  if(mov[50]==0x20){mdstate[6]=(int)0x0020;}
+  if(mov[50]==0x40){mdstate[7]=(int)0x0040;}
+  if(mov[50]==0x80){mdstate[8]=(int)0x0080;}
+  if(mov[49]==0x01){mdstate[9]=(int)0x0100;}
+  if(mov[49]==0x02){mdstate[10]=(int)0x0200;}
+  if(mov[49]==0x04){mdstate[11]=(int)0x0400;}
+  if(mov[49]==0x08){mdstate[12]=(int)0x0800;}
+  if(mov[49]==0x10){mdstate[13]=(int)0x1000;}
+  if(mov[49]==0x20){mdstate[14]=(int)0x2000;}
+  if(mov[49]==0x40){mdstate[15]=(int)0x4000;}
+  if(mov[49]==0x80){mdstate[16]=(int)0x8000;}
+  for(i=1;i<17;i++){lumd+=mdstate[i];}
+  state[41]=lumd>>8;
+  state[42]=lumd;
+  if(mov[54]==0x01){mdstate[17]=(int)0x0001;}// 左下电机
+  if(mov[54]==0x02){mdstate[18]=(int)0x0002;}
+  if(mov[54]==0x04){mdstate[19]=(int)0x0004;}
+  if(mov[54]==0x08){mdstate[20]=(int)0x0008;}
+  if(mov[54]==0x10){mdstate[21]=(int)0x0010;}
+  if(mov[54]==0x20){mdstate[22]=(int)0x0020;}
+  if(mov[54]==0x40){mdstate[23]=(int)0x0040;}
+  if(mov[54]==0x80){mdstate[24]=(int)0x0080;}
+  if(mov[53]==0x01){mdstate[25]=(int)0x0100;}
+  if(mov[53]==0x02){mdstate[26]=(int)0x0200;}
+  if(mov[53]==0x04){mdstate[27]=(int)0x0400;}
+  if(mov[53]==0x08){mdstate[28]=(int)0x0800;}
+  if(mov[53]==0x10){mdstate[29]=(int)0x1000;}
+  if(mov[53]==0x20){mdstate[30]=(int)0x2000;}
+  if(mov[53]==0x40){mdstate[31]=(int)0x4000;}
+  if(mov[53]==0x80){mdstate[32]=(int)0x8000;}
+  for(j=17;j<33;j++){ldmd+=mdstate[i];}
+  state[43]=ldmd>>8;
+  state[44]=ldmd;
+  if(mov[58]==0x01){mdstate[33]=(int)0x0001;}// 右上电机
+  if(mov[58]==0x02){mdstate[34]=(int)0x0002;}
+  if(mov[58]==0x04){mdstate[35]=(int)0x0004;}
+  if(mov[58]==0x08){mdstate[36]=(int)0x0008;}
+  if(mov[58]==0x10){mdstate[37]=(int)0x0010;}
+  if(mov[58]==0x20){mdstate[38]=(int)0x0020;}
+  if(mov[58]==0x40){mdstate[39]=(int)0x0040;}
+  if(mov[58]==0x80){mdstate[40]=(int)0x0080;}
+  if(mov[57]==0x01){mdstate[41]=(int)0x0100;}
+  if(mov[57]==0x02){mdstate[42]=(int)0x0200;}
+  if(mov[57]==0x04){mdstate[43]=(int)0x0400;}
+  if(mov[57]==0x08){mdstate[44]=(int)0x0800;}
+  if(mov[57]==0x10){mdstate[45]=(int)0x1000;}
+  if(mov[57]==0x20){mdstate[46]=(int)0x2000;}
+  if(mov[57]==0x40){mdstate[47]=(int)0x4000;}
+  if(mov[57]==0x80){mdstate[48]=(int)0x8000;}
+  for(k=33;k<49;k++){wumd+=mdstate[i];}
+  state[45]=wumd>>8;
+  state[46]=wumd;
+  if(mov[62]==0x01){mdstate[49]=(int)0x0001;}// 右下电机
+  if(mov[62]==0x02){mdstate[50]=(int)0x0002;}
+  if(mov[62]==0x04){mdstate[51]=(int)0x0004;}
+  if(mov[62]==0x08){mdstate[52]=(int)0x0008;}
+  if(mov[62]==0x10){mdstate[53]=(int)0x0010;}
+  if(mov[62]==0x20){mdstate[54]=(int)0x0020;}
+  if(mov[62]==0x40){mdstate[55]=(int)0x0040;}
+  if(mov[62]==0x80){mdstate[56]=(int)0x0080;}
+  if(mov[61]==0x01){mdstate[57]=(int)0x0100;}
+  if(mov[61]==0x02){mdstate[58]=(int)0x0200;}
+  if(mov[61]==0x04){mdstate[59]=(int)0x0400;}
+  if(mov[61]==0x08){mdstate[60]=(int)0x0800;}
+  if(mov[61]==0x10){mdstate[61]=(int)0x1000;}
+  if(mov[61]==0x20){mdstate[62]=(int)0x2000;}
+  if(mov[61]==0x40){mdstate[63]=(int)0x4000;}
+  if(mov[61]==0x80){mdstate[64]=(int)0x8000;}
+  for(l=49;l<65;l++){wdmd+=mdstate[i];}
+  state[47]=wdmd>>8;
+  state[48]=wdmd;
+  
+
+}
+
+
+void statecallback5(const stateandalarm::state::ConstPtr& msg5)
+{
+  //获取路径规划信息；
+  
+  ROS_INFO("receive msg from route!\n");
+  char rout[3]={0};
+  strcpy(rout,msg5->data.c_str());
+  state[16]=0x54;//云台高度
+  int test=10;//only for test 
+  state[17]=test>>8;//only for test
+  state[18]=test;//for test only
+  state[30]=0x59;//机器人控制模式
+  //state[31]=rout[0];
+  state[31]=0x01;//only for test
+  state[32]=0x5A;//是否到达目标点
+ // state[33]=rout[1];
+  state[33]=0x01;////only for test
+
+}  
+
+//void statecallback6(const stateandalarm::state::ConstPtr& msg6)
+//{
+//    char lift[2]={0};
+//    strcpy(lift,msg6->data.c_str());
+//    state[16]=0x54;//云台高度
+//    state[17]=lift[0];
+//    state[18]=lift[1];
+//}
+
+
+   
+
+
+
+int main(int argc, char**argv)
+{
+    ros::init(argc, argv, "stateandalarm");
+    ros::NodeHandle n;    
+    ros::Publisher pub = n.advertise<communication::state>("state_robot",1000);
+        state[0]=0x01;//接收正常
+        state[1]=0x51;//机器人坐标，cm
+        state[10]=0x52;//机器人位姿
+        state[13]=0x53;//机器人速度
+        state[16]=0x54;//云台高度
+        state[19]=0x55;//机器人电量
+        state[21]=0x56; //机内温度
+        state[26]=0x57;//急停状态
+        state[28]=0x58;//超声波状态
+        state[34]=0x5B;//机器人状态
+        state[30]=0x59;//机器人控制模式
+        state[32]=0x5A;//是否到达目标点
+        state[34]=0x5B;//机器人状态
+    
+
+       
+
+       ros::Subscriber sub1 = n.subscribe("topic_robot_pose",1, &statecallback1);
+//订阅机器人位姿信息
+
+        ros::Subscriber sub2 = n.subscribe("odom",1,&statecallback2);
+//订阅机器人实时速度消息
+
+       ros::Subscriber sub3 = n.subscribe("communication/state_plc",1,&statecallback3);
+//订阅plc板的状态消息
+ 
+       ros::Subscriber sub4 = n.subscribe("communication/state_move",1,&statecallback4);
+//订阅运动控制板的状态消息
+
+       ros::Subscriber  sub5 = n.subscribe("state_route",1,&statecallback5);
+//订阅路径规划的信息 
+// sub6 = n.subscribe("lift",1,&robotState::statecallback6,this);
+//订阅升降机消息
+       ros::AsyncSpinner spinner(6);
+       spinner.start();
+
+       ros::Rate loop_rate(10);
+ 
+       ros::waitForShutdown();
+    	
+       //ros::spin(s);
+	
+	return 0;
+
+}
+   
+  
+     
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

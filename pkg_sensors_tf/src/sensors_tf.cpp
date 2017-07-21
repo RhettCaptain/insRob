@@ -8,7 +8,7 @@ int main(int argc,char** argv)
 	tf::TransformBroadcaster tfBroadcaster;
 	tf::Transform baselink2LaserTf = tf::Transform(tf::Quaternion(0,0,0),tf::Vector3(0.33,0,0));
 	tf::Transform baselink2CompassTf = tf::Transform(tf::Quaternion(0,0,0,1),tf::Vector3(0,0,0));
-	ros::Rate loop_rate(20);
+	ros::Rate loop_rate(50);
 	while(nodeHandle.ok())
 	{
 		tfBroadcaster.sendTransform(

@@ -1,0 +1,6 @@
+int32 lenth
+string type
+string data
+---
+bool receive
+

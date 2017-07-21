@@ -1,0 +1,9 @@
+string state  
+string pointtype   
+string location  
+string pose 
+string speed  
+string height  
+string pointlevel  
+bool stopflag
+string routeid
