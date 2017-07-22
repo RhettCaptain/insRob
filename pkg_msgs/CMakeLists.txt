@@ -51,6 +51,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    MsgServerCmd.msg
    MsgOdometrySensor.msg
+   MsgPointInfo.msg
 #   Message2.msg
  )
 

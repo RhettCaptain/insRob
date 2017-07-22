@@ -10,7 +10,6 @@
 #include "pkg_srvs/SrvGetLine.h"  //两点求直线服务
 #include "pkg_srvs/SrvGetYawBias.h" //求偏行角服务
 #include <string.h>
-//#include "processor/stopflag.h"
 #include <iostream>
 
 using namespace std;
@@ -154,7 +153,7 @@ void moveordercallback(const processor::moveorder::ConstPtr& msg)//主控板消�
            pose[0]=strpose[2*i+0];
            pose[1]=strpose[2*i+1];
                 
-           //MoveControl::tarjectoryTracking(locationX,locationY);//调用轨迹跟踪	   
+           MoveControl::tarjectoryTracking(locationX,locationY);//调用轨迹跟踪	   
            i++ ;   
 	   }while(i<pn);
 	   

@@ -207,6 +207,7 @@ void UDP_Client::receive(int max)
 		char *buf;
 		buf=(char *)data_in.c_str();
 		int out_len=data_in.size();
+		len=out_len;
 		cout<<"message to processor : ";
 		HexDump(buf,out_len,0);
 		//****//

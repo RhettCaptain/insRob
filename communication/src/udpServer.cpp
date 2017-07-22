@@ -5,12 +5,12 @@
 */
 #include <communication/udp_server.h>
 #include <communication/display.h>
+#include <communication/state.h>
 
-
-#define  CONNECT_CMD 	0x00                                        //连接指令
+#define  CONNECT_CMD 	        0x00                                 //连接指令
 #define  ASK_CMD      		0x50  	                            //查询指令
 #define  SET_CMD		0x10			          //peizhi指令		     
-
+#define  BATTERY_CMD            0xA0                              //电源数据
 
 bool UDP_Server::open()
 {
@@ -50,6 +50,7 @@ void UDP_Server::init(int port,char *send,char *rec,ros::NodeHandle &n,
 	recBuf=rec;
 	count=0;
 	sub_state=n.subscribe("processor/state",100,&UDP_Server::callback,this);
+	sub_state2=n.subscribe("/communication/state_battery",2,&UDP_Server::battery_callback,this);
 	pub_command=n.advertise<communication::command>("communication/cmd",10);
 	time_broken=broken_time;
 	time_wrong =wrong_time;
@@ -62,6 +63,11 @@ void UDP_Server::callback(const communication::state &msg)
 {
 	data_out="";
 	data_out+=msg.data;
+}
+void UDP_Server::battery_callback(const communication::state &msg)
+{
+	data_battery="";
+	data_battery+=msg.data;
 }
 
 /* 函数名:wait_connect  等待连接
@@ -385,6 +391,29 @@ void UDP_Server::process()
 				time_wrong=data[5];
 				time_broken=data[7];
 				//printf("wrong : %d, broken : %d \n",time_wrong,time_broken );
+
+			}
+			else if(t==BATTERY_CMD)
+			{
+			        printf("battery command\n");
+			   	int temp_lenth=data_battery.size();
+			   	if(temp_lenth>128)
+			   	{ len_out[0]=0x01;
+			   	  len_out[1]=temp_lenth-128;
+                                 }
+                                 else
+                                 {
+                                  len_out[0]=0x00;
+			   	  len_out[1]=temp_lenth;
+                                 }
+				out=out+len_out[0];
+				out=out+len_out[1];
+                                printf("the lenth is %d\n",(int)len_out[1]);
+                                
+				out+=t;
+				//out+=rec;
+				out+=data_battery;
+				check_out=getCrc(out);// update crc	
 
 			}
 			else 

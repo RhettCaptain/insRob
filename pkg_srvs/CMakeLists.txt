@@ -64,6 +64,7 @@ find_package(catkin REQUIRED COMPONENTS
    SrvPointLine.srv
    SrvGetYawBias.srv
    SrvGetDistance.srv
+   SrvReturn.srv
  )
 
 ## Generate actions in the 'action' folder

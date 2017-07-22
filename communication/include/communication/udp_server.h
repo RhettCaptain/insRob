@@ -43,6 +43,7 @@ class UDP_Server
 	void wait_connect(int maxsize,int time);
 	void wait_reconnect(int maxsize);
 	void callback(const communication::state &msg);
+	void battery_callback(const communication::state &msg);
 
 	private:
 	int sockfd;
@@ -57,9 +58,11 @@ class UDP_Server
 	string type;
 	string data_in;
 	string data_out;
+	string data_battery;
 	
 	communication::command pub_msg;
 	ros::Subscriber sub_state;
+	ros::Subscriber sub_state2;
 	ros::Publisher pub_command;
 	bool connect;
 	bool broken;

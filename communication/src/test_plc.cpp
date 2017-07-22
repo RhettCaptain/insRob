@@ -23,6 +23,8 @@
  char CONNECT_DATA =0X01;
  char STATE_TYPE = 0X20;
  char STATE_DATA = 0X01;
+ char BATTERY_TYPE = 0X60;
+ char BATTERY_DATA = 0X01;
 
 
 bool sendCallback(communication::sendCmd::Request  &req,
@@ -35,6 +37,8 @@ int main(int argc,char ** argv)
 	ros::NodeHandle nh;
 	ros::ServiceServer send_Cmd = nh.advertiseService("send_plc_cmd", sendCallback);
 	ros::Publisher pub_state=nh.advertise<communication::state>("communication/state_plc",10);
+	ros::Publisher pub_state2=nh.advertise<communication::state>("communication/state_battery",10);
+	
 	communication::state msg;
 
 	char rec[MAXSIZE];
@@ -45,6 +49,7 @@ int main(int argc,char ** argv)
 	
 	int conn_time=0;
 	ros::Rate rate(10);
+	int n=0;
 	
 	string t;
 	string d;
@@ -69,8 +74,30 @@ int main(int argc,char ** argv)
 			}
   		}
   		else 
-  		{	
-  			printf("ask command\n");
+  		{
+  		       n++;	
+  		      if(n%10==0)
+  		      { 
+  		        n=0;
+  		        printf("battery command\n");
+  			conn_time=0;
+			t=BATTERY_TYPE;
+  			d=BATTERY_DATA;
+  			client.sendInfo(t,d);
+			client.wait_back(MAXSIZE,TIME_WRONG);  // 6s zhong wu shuju ,ze chonglian
+  			
+			cout<<endl;
+  			msg.break_flag=false;
+  			msg.type=BATTERY_TYPE;
+  			msg.data=client.data_in;
+  			msg.lenth=client.len+1;//data lenth and type lenth
+  			pub_state2.publish(msg);
+  		       
+  		      }
+  		      else 
+  		      {
+  		        
+  		        printf("ask command\n");
   			conn_time=0;
 			t=STATE_TYPE;
   			d=STATE_DATA;
@@ -78,13 +105,14 @@ int main(int argc,char ** argv)
 			client.wait_back(MAXSIZE,TIME_WRONG);  // 6s zhong wu shuju ,ze chonglian
   			
 			cout<<endl;
-
   			msg.break_flag=false;
   			msg.type=STATE_TYPE;
   			msg.data=client.data_in;
   			msg.lenth=client.len+1;//data lenth and type lenth
-
   			pub_state.publish(msg);
+  		      
+  		      }
+  			
   		}
     	
     		ros::spinOnce();

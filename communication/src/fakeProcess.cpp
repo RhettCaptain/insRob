@@ -22,7 +22,15 @@ int main(int argc, char **argv)
       communication::sendCmd srv;
       communication::state  msg;
 
-      char cmd_type=0x40 ;
+      char cmd_type=0x60 ;
+      string p="";
+      char temp=0x01;
+      p+=temp;
+     
+      
+    /*  char cmd_type=0x40 ;
+      string p="";
+    /*  char cmd_type=0x40 ;
       string p="";
       char temp=0x41; 
       p+=temp;
@@ -42,7 +50,7 @@ int main(int argc, char **argv)
       p+=temp;
       temp=0x00;
       p+=temp;
-   
+   */
      /* char cmd_type=0x10 ;
       string p="";
       char temp=0x11; 
@@ -130,7 +138,7 @@ int main(int argc, char **argv)
         printf("plc serve\n");
           if (client.call(srv)&&srv.response.receive)
             {
-              ROS_INFO("sucess");
+              ROS_INFO("plc sucess");
             }
             else
             {

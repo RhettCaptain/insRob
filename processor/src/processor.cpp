@@ -1,7 +1,6 @@
 #include "ros/ros.h"
 #include "communication/command.h"
 #include "processor/moveorder.h"
-//#include "processor/stopflag.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "pkg_srvs/SrvMode.h"
 #include "communication/sendCmd.h"
